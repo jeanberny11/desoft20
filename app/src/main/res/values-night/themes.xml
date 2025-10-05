@@ -1,0 +1,16 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <!-- We're not supporting dark theme for now, but this file prevents crashes -->
+    <!-- Base application theme for dark theme - same as light theme -->
+    <style name="Theme.DesoftinfApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Same as light theme for now -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">@color/primary</item>
+    </style>
+</resources>

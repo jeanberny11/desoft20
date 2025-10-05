@@ -1,0 +1,56 @@
+<resources>
+    <string name="app_name">Desoft App</string>
+
+    <!-- Main Screen -->
+    <string name="loading">Loading…</string>
+    <string name="connection_error">Connection Error</string>
+    <string name="retry">Retry</string>
+    <string name="refresh">Refresh</string>
+
+    <!-- WebView -->
+    <string name="webview_loading">Loading web content…</string>
+    <string name="webview_error">Failed to load web content</string>
+
+    <!-- Permissions -->
+    <string name="permission_camera_title">Camera Permission</string>
+    <string name="permission_camera_description">Camera access is required for barcode scanning</string>
+    <string name="permission_location_title">Location Permission</string>
+    <string name="permission_location_description">Location access is required for GPS features</string>
+    <string name="permission_bluetooth_title">Bluetooth Permission</string>
+    <string name="permission_bluetooth_description">Bluetooth access is required for printer connectivity</string>
+    <string name="permission_granted">Permission Granted</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="grant_permission">Grant Permission</string>
+
+    <!-- Features -->
+    <string name="barcode_scan_title">Scan Barcode</string>
+    <string name="barcode_scan_instruction">Point camera at barcode to scan</string>
+    <string name="bluetooth_devices_title">Select Bluetooth Device</string>
+    <string name="no_bluetooth_devices">No Bluetooth devices found</string>
+    <string name="printer_connecting">Connecting to printer…</string>
+    <string name="printer_connected">Printer connected</string>
+    <string name="printer_disconnected">Printer disconnected</string>
+    <string name="print_success">Print job completed</string>
+    <string name="print_error">Print job failed</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="configuration">Configuration</string>
+    <string name="local_url">Local URL</string>
+    <string name="remote_url">Remote URL</string>
+    <string name="printer_name">Printer Name</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="reset_to_default">Reset to Default</string>
+
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="close">Close</string>
+    <string name="back">Back</string>
+    <string name="next">Next</string>
+    <string name="done">Done</string>
+    <string name="unknown">Unknown</string>
+    <string name="unavailable">Unavailable</string>
+</resources>

@@ -1,0 +1,127 @@
+body
+{
+   background-color: #FF0000;
+   color: #000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   line-height: 1.1875;
+   margin: 0;
+   padding: 0;
+}
+#Layer2
+{
+   background-color: #FFFFFF;
+   background-image: none;
+   border: 1px #CCCCCC solid;
+}
+#Label1
+{
+   border: 0px #CCCCCC solid;
+   -moz-border-radius: 4px;
+   -webkit-border-radius: 4px;
+   border-radius: 4px;
+   background-color: transparent;
+   background-image: none;
+   color :#000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 13px;
+   padding: 4px 4px 4px 4px;
+   text-align: center;
+   vertical-align: middle;
+}
+#TextArea1
+{
+   border: 1px #CCCCCC solid;
+   -moz-border-radius: 4px;
+   -webkit-border-radius: 4px;
+   border-radius: 4px;
+   background-color: #F5F5F5;
+   background-image: none;
+   color :#000000;
+   font-family: Arial;
+   font-weight: normal;
+   font-size: 16px;
+   padding: 4px 4px 4px 4px;
+   text-align: left;
+   overflow: auto;
+   resize: none;
+}
+#TextArea1:focus
+{
+   border-color: #66AFE9;
+   -webkit-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   -moz-box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   box-shadow: inset 0px 1px 1px rgba(0,0,0,0.075), 0px 0px 8px rgba(102,175,233,0.60);
+   outline: 0;
+}
+#Layer2
+{
+   position: fixed;
+   text-align: left;
+   left: 0;
+   top: 0;
+   right: 0;
+   bottom: 0;
+   z-index: 2;
+}
+#TextArea1
+{
+   position: absolute;
+   left: 1%;
+   top: 1%;
+   width: 95%;
+   height: 90%;
+   z-index: 1;
+}
+#Label1
+{
+   position: absolute;
+   left: 18%;
+   top: 94%;
+   width: 60%;
+   height: 4%;
+   height: 0%;
+   z-index: 0;
+}
+@media only screen and (max-width: 969px)
+{
+body
+{
+   background-color: #FFFFFF;
+   background-image: none;
+}
+#Layer2
+{
+   visibility: visible;
+   display: inline;
+   background-color: #FFFFFF;
+   background-image: none;
+}
+#Label1
+{
+   left: 4%;
+   top: 93%;
+   width: 88%;
+   height: 4%;
+   visibility: visible;
+   display: inline;
+   color: #000000;
+   background-color: transparent;
+   background-image: none;
+}
+#TextArea1
+{
+   left: 1%;
+   top: 1%;
+   width: 95%;
+   height: 89%;
+   visibility: visible;
+   display: inline;
+   color: #000000;
+   font-size: 15px;
+   background-color: #F5F5F5;
+   background-image: none;
+}
+}

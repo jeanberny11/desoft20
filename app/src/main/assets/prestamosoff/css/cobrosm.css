@@ -1,0 +1,219 @@
+/* line 2, D:/sistemas/prestamos/css/cobrosm.scss */
+li.gra {
+  width: 79%; }
+
+/* line 5, D:/sistemas/prestamos/css/cobrosm.scss */
+li.gra1 {
+  width: 99%; }
+
+/* line 8, D:/sistemas/prestamos/css/cobrosm.scss */
+li.med {
+  width: 33.5%; }
+
+/* line 11, D:/sistemas/prestamos/css/cobrosm.scss */
+li.med2 {
+  width: 54%; }
+
+/* line 15, D:/sistemas/prestamos/css/cobrosm.scss */
+li.min {
+  width: 19%; }
+
+/* line 18, D:/sistemas/prestamos/css/cobrosm.scss */
+li.min1 {
+  width: 4%; }
+
+/* line 22, D:/sistemas/prestamos/css/cobrosm.scss */
+li.min2 {
+  width: 24%; }
+
+/* line 25, D:/sistemas/prestamos/css/cobrosm.scss */
+li.min3 {
+  width: 29%; }
+
+/* line 29, D:/sistemas/prestamos/css/cobrosm.scss */
+li.list-group-item {
+  width: 100%;
+  padding: 0px;
+  height: 40px; }
+
+/* line 36, D:/sistemas/prestamos/css/cobrosm.scss */
+.wrapper {
+  padding: 0px; }
+
+/* line 40, D:/sistemas/prestamos/css/cobrosm.scss */
+.msgimp {
+  width: 100%;
+  position: absolute;
+  height: 100%;
+  top: 0px;
+  background-color: rgba(10, 10, 10, 0.52);
+  left: 0px;
+  z-index: 999; }
+  /* line 48, D:/sistemas/prestamos/css/cobrosm.scss */
+  .msgimp .opciones {
+    width: 150px;
+    max-width: 150px;
+    margin-left: auto;
+    margin-right: auto; }
+  /* line 54, D:/sistemas/prestamos/css/cobrosm.scss */
+  .msgimp button {
+    width: 100%;
+    border-radius: 0pc; }
+
+/* line 60, D:/sistemas/prestamos/css/cobrosm.scss */
+.list-group .form-group {
+  margin-bottom: 0px;
+  width: 13em;
+  float: right; }
+
+/* line 66, D:/sistemas/prestamos/css/cobrosm.scss */
+td.remove a {
+  color: red;
+  font-weight: bold;
+  font-size: 14px; }
+
+/* line 72, D:/sistemas/prestamos/css/cobrosm.scss */
+tbody#detalle-facturas tr {
+  cursor: pointer; }
+
+/* line 76, D:/sistemas/prestamos/css/cobrosm.scss */
+#PREA_ART, #PREB_ART, #PREE_ART {
+  font-size: large;
+  padding: 0px;
+  height: 25px;
+  text-align: right;
+  padding-right: 6px;
+  background-color: white; }
+
+/* line 86, D:/sistemas/prestamos/css/cobrosm.scss */
+.panel .table th[scope] {
+  text-align: left;
+  padding-right: 5px; }
+
+/* line 92, D:/sistemas/prestamos/css/cobrosm.scss */
+#COS_ART {
+  font-size: large; }
+
+/* line 96, D:/sistemas/prestamos/css/cobrosm.scss */
+.panel > .list-group .list-group-item {
+  padding: 13px 0px 0px 0px; }
+
+/* line 100, D:/sistemas/prestamos/css/cobrosm.scss */
+.epre {
+  font-size: large; }
+
+/* line 104, D:/sistemas/prestamos/css/cobrosm.scss */
+.list-group input {
+  border: none;
+  height: 40px; }
+
+/* line 109, D:/sistemas/prestamos/css/cobrosm.scss */
+.content-pro {
+  min-width: 580px; }
+  /* line 111, D:/sistemas/prestamos/css/cobrosm.scss */
+  .content-pro div#botones {
+    margin-right: auto;
+    margin-left: auto;
+    width: 100%;
+    max-width: 430px;
+    text-align: center; }
+
+/* line 120, D:/sistemas/prestamos/css/cobrosm.scss */
+html.firefox .panel > .list-group .list-group-item {
+  border-width: 1px 0px;
+  border-radius: 0px;
+  margin-bottom: -4px; }
+
+/* line 127, D:/sistemas/prestamos/css/cobrosm.scss */
+.conten {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  border: 0px;
+  border-radius: 0px;
+  max-width: 850px;
+  background: rgba(147, 149, 150, 0.45);
+  color: black;
+  overflow: hidden; }
+  /* line 137, D:/sistemas/prestamos/css/cobrosm.scss */
+  .conten .tabl {
+    overflow: hidden; }
+
+/* line 142, D:/sistemas/prestamos/css/cobrosm.scss */
+.botones {
+  width: 25%;
+  margin: 0px;
+  border: 0px;
+  border-radius: 0px;
+  height: 45px;
+  font-size: 24px;
+  font-weight: bold; }
+
+/* line 152, D:/sistemas/prestamos/css/cobrosm.scss */
+.msgimp {
+  width: 100%;
+  position: absolute;
+  height: 100%;
+  top: 0px;
+  background-color: rgba(10, 10, 10, 0.52);
+  left: 0px;
+  z-index: 999; }
+
+/* line 161, D:/sistemas/prestamos/css/cobrosm.scss */
+.msgimp .opciones {
+  width: 150px;
+  max-width: 150px;
+  margin-left: auto;
+  margin-right: auto; }
+
+/* line 167, D:/sistemas/prestamos/css/cobrosm.scss */
+.msgimp button {
+  width: 100%;
+  border-radius: 0pc; }
+
+/* line 171, D:/sistemas/prestamos/css/cobrosm.scss */
+tbody#detalle-productos tr {
+  cursor: pointer; }
+
+/* line 174, D:/sistemas/prestamos/css/cobrosm.scss */
+table.cuota {
+  font-size: 14px; }
+  /* line 176, D:/sistemas/prestamos/css/cobrosm.scss */
+  table.cuota thead tr {
+    display: block; }
+
+/* line 180, D:/sistemas/prestamos/css/cobrosm.scss */
+tbody.cuotas {
+  height: 200px;
+  overflow: hidden;
+  display: block;
+  overflow-y: scroll;
+  width: 100%; }
+
+/* line 187, D:/sistemas/prestamos/css/cobrosm.scss */
+.recibo {
+  transform: translate(300%, 1000%); }
+  /* line 189, D:/sistemas/prestamos/css/cobrosm.scss */
+  .recibo.centror {
+    transform: translate(0%, -58%);
+    position: absolute; }
+
+@media screen and (max-width: 941px) {
+  /* line 196, D:/sistemas/prestamos/css/cobrosm.scss */
+  .list-group .form-group {
+    width: 12em; } }
+
+@media screen and (max-width: 893px) {
+  /* line 204, D:/sistemas/prestamos/css/cobrosm.scss */
+  .list-group .form-group {
+    width: 11em; } }
+
+@media screen and (max-width: 847px) {
+  /* line 212, D:/sistemas/prestamos/css/cobrosm.scss */
+  .list-group .form-group {
+    width: 10em; } }
+
+@media screen and (max-width: 847px) {
+  /* line 220, D:/sistemas/prestamos/css/cobrosm.scss */
+  .list-group .form-group {
+    width: 9em; } }

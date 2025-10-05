@@ -1,0 +1,691 @@
+body{
+	background-color: rgba(247, 247, 247, 0.4);
+	webkit-box-sizing: border-box;
+}
+
+body.tb-box{
+	width: 99%;
+	background-color: rgba(247, 247, 247, 0);
+}
+
+body.tb-box > div.conten{
+	margin-top: 10px;
+}
+
+li.dropdown-submenu {
+ 	font-size: 18px;
+}
+
+.menu{
+	font-size: 18px;
+}
+
+ul.dropdown-menu {
+	font-size: 17px;
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	
+}
+
+.fa.fa-angle-down.text{
+	margin-left: 10px;
+}
+
+.conten{
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;
+	border: 1px solid #ccc;
+	border-radius: 12px;
+	margin-bottom:20px;
+}
+
+.tabl{
+	width: 90%;
+	margin-right: auto;
+	margin-left: auto;
+	max-width: 750px;
+}
+
+
+.but{
+ 	color: #000;
+	font-size: 20px;
+	padding: 7px;
+	border: 2px solid rgba(5, 5, 5, 0.63);
+	border-radius: 12px;
+	margin: 4px;
+}
+
+.but:hover{
+ 	border: 2px solid rgb(0, 0, 0);
+}
+
+.butp{
+	margin-bottom: 12px;
+}
+
+.form-group {
+  margin-bottom: 0px;
+}
+
+.busqq {
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 17px;
+  color: #000;
+  padding-left: 2px;
+}
+
+#div_carga{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+	background-color:rgba(36, 35, 35, 0.5);
+	display:none;
+	z-index:101;
+}
+
+#cargador{
+    position:absolute;
+    top:50%;
+    left: 50%;
+    margin-top: -25px;
+    margin-left: -25px;
+}
+
+.input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
+	height: 24px;
+	padding: 0px 5px;
+	font-size: 15px;
+}
+
+@media screen and (max-width: 750px){
+	.conten{
+		width: 98%;
+		margin-left: auto;
+		margin-right: auto;
+		border: 1px solid #ccc;
+		border-radius: 12px;
+		margin-top:0px;
+	}
+
+	.tabl{
+		width: 98%;
+		margin-right: auto;
+		margin-left: auto;
+	}
+
+
+}
+
+
+body{
+	background-color: rgba(247, 247, 247, 0.4);
+	webkit-box-sizing: border-box;
+}
+
+body.tb-box{
+	width: 99%;
+	background-color: rgba(247, 247, 247, 0);
+}
+
+body.tb-box > div.conten{
+	margin-top: 10px;
+}
+
+@media screen and (max-width: 320px){
+	body.tbox{
+		background-color: rgba(247, 247, 247, 0);
+		width: 98%;
+	}
+}
+
+
+
+
+
+.menu{
+	font-size: 17px;
+}
+
+ul.dropdown-menu {
+	font-size: 17px;
+	border-bottom-left-radius: 8px;
+border-bottom-right-radius: 8px;
+}
+
+
+
+.fa.fa-angle-down.text{
+	margin-left: 10px;
+}
+
+.conten{
+	
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;
+	border: 1px solid #ccc;
+	border-radius: 12px;
+	margin-bottom:20px;
+}
+.lp{
+	width: 75%;
+}
+
+.tabl{
+	width: 90%;
+	margin-right: auto;
+	margin-left: auto;
+	max-width: 750px;
+
+}
+
+.lq{
+	max-width: 100%;
+}
+
+.busq{
+	border: 1px solid #ccc;
+	border-radius: 4px;
+}
+
+@media screen and (max-width: 750px){
+.conten{
+	
+	width: 98%;
+	margin-left: auto;
+	margin-right: auto;
+	border: 1px solid #ccc;
+	border-radius: 12px;
+	margin-top:0px;
+}
+
+.tabl{
+	width: 98%;
+	margin-right: auto;
+	margin-left: auto;
+
+}
+.btn.procesar-pedido{
+width: 100%;
+
+}
+
+.btn.procesar-pedido{
+	width: 100%;
+	line-height: 2.4285;
+}
+.mob{
+	width: 100%;
+}
+.lp{
+	width: 100%;
+}
+
+}
+
+@media (max-width: 1000px){
+	.table-responsive {
+	width: 100%;
+	margin-bottom: 15px;
+	overflow-x: scroll;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
+	-ms-overflow-style: -ms-autohiding-scrollbar;
+	border: 1px solid #ddd;
+	}
+}
+
+.input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
+height: 24px;
+padding: 0px 5px;
+font-size: 15px;
+}
+
+.form-group {
+margin-bottom: 0px; 
+}
+ .busqq{
+ 	margin-left: auto;
+	margin-right: auto;
+	font-size: 17px;
+	color: #000;
+	padding-left: 2px;
+
+ }
+
+ .but{
+ 	color: #000;
+	font-size: 20px;
+	padding: 7px;
+	border: 2px solid rgba(5, 5, 5, 0.63);
+	border-radius: 12px;
+	margin: 4px;
+}
+
+.but:hover{
+ 	border: 2px solid rgb(0, 0, 0);
+}
+
+
+.butp{
+	margin-bottom: 12px;
+}
+
+.tbl{
+	border-spacing: 1px;
+	border-collapse: inherit;
+	margin-bottom: 1px;
+}
+
+table.tbll>tbody>tr>td{
+	height: 2.5em;
+}
+
+input#COD_CLI, input#COD_ART, input#CANT_ART, input#OFER_ART, input#PLA_PED, input#COD_VEN{
+	min-width: 4em;
+	max-width: 6em;
+}
+
+input#datepicker, input#s1Time2, input#theDate, input#theDate1, input#HORA_PLAN, input#FEC_PLAN{
+	min-width: 5em;
+	max-width: 8em
+}
+
+input#COD_PED{
+	min-width: 3em;
+	max-width: 6em
+}
+
+.btn.procesar-pedido{
+	background: rgb(0, 0, 0);
+	margin:5px;
+	margin-left: auto;
+	margin-right: auto;
+	font-weight: normal;
+	text-shadow: none;
+	border-color: #000;
+}
+
+.btn.procesar-pedido:hover{
+	background: rgb(71, 66, 66);
+	font-weight: bold;
+	text-shadow: 1px 1px 1px rgba(255,255,255,0.5);
+	border-color: rgba(50, 50, 50, 0.3);
+}
+
+body > div > div > fieldset > table:nth-child(4) > tbody > tr > td:nth-child(1) > div > button{
+	line-height: 1.5;
+	
+}
+
+body > div > div > fieldset > table:nth-child(4) > tbody > tr > td:nth-child(2) > div > button{
+	line-height: 1.5;
+}
+.butt{
+	margin-left: 3px;
+}
+
+.lw {
+	width: 100%;
+	margin-bottom: 15px;
+	overflow-x: scroll;
+	overflow-y: hidden;
+	-webkit-overflow-scrolling: touch;
+	-ms-overflow-style: -ms-autohiding-scrollbar;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+}
+
+#ventas > table{
+	width: 1200px;
+	margin-left: 5px;
+}
+
+#ventas > fieldset > table{
+	margin-left: 5px;
+	width: 1200px;
+}
+
+.act {
+	
+	float: left;
+	width: 33.32%;
+	display: inline-block;
+	margin-bottom: 0px;
+	padding-left: 3%;
+	padding-right: 3%;		
+}
+.act.active .act-btn{
+		
+	background: darkgrey;
+	border: none;
+	box-shadow: inset 0px 1px 1px rgb(68, 68, 68), inset 0px -1px 0px rgb(255, 255, 255);					
+}
+
+.act.active .glyphicon {
+	color: #fff;
+	text-shadow: 0px 1px rgba(10,10,10,.4);
+}
+.act.active .title {
+	color: rgb(156, 150, 150);
+}							
+
+.act .title{
+	text-align: center;
+	margin-top: 5px;
+	text-transform: uppercase;
+	font-weight: 600;
+	color: rgb(156, 150, 150);
+	transition: all .15s ease-in-out;				
+}
+
+a.act-btn {
+	display: table;
+	height: 75px;
+	width: 75px;
+	margin-left: auto;
+	margin-right: auto;
+	border: 2px solid rgb(156, 150, 150);
+	border-radius: 4px;
+	text-align: center;
+	color: rgb(209, 208, 208);
+	text-decoration: none;
+	transition: all .15s ease-in-out;
+}
+
+
+.act .glyphicon {
+	font-size: 2em;
+	display: table-cell;
+	vertical-align: middle;
+	color: rgb(156, 150, 150);
+}
+
+
+.reporte a.ver-objetivos {
+	font-size: 1.3em;
+	margin-top: -5px;
+	width: 100%;
+
+}
+
+@media screen and (max-width: 500px) {
+	.reporte a.ver-objetivos {
+		display: block;
+		width: 100%;
+		border: 0px;
+		border-radius: 2px;
+	}
+}
+
+.reporte .objetivos-ver {
+	height: 0px;
+	overflow: hidden;
+	opacity: 0;
+	
+}
+
+.reporte .objetivos-ver.activo {
+	height: auto;
+	opacity: 1;
+	transition: all .2s ease-in-out;
+}
+
+.glyphicon-chevron-right.activo {
+	-webkit-transform: rotate(90deg);
+	transition: all .2s ease-in-out;
+}
+
+
+#div_carga{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+	background-color:rgba(36, 35, 35, 0.5);
+	display:none;
+	z-index:101;
+}
+
+#cargador{
+    position:absolute;
+    top:50%;
+    left: 50%;
+    margin-top: -25px;
+    margin-left: -25px;
+}
+
+div.checkbox{
+	float: right;
+	min-height: 0px;
+
+}
+
+body.ficha div.conten ul {
+	padding-left: 0px;
+	margin-bottom: 5px;
+		
+}
+
+body.ficha div.conten ul li{
+	margin-bottom: 5px;
+	display: block;
+		
+}
+
+body.ficha div.conten ul li input{
+	min-width: 12em;
+
+}
+
+body.ficha.emp div.conten ul li input{
+	min-width: 9em;
+}
+
+
+
+body.ficha ul li.anc{
+	width: 100%;
+			
+}
+
+body.ficha a.btn{
+		margin-bottom: 5px;
+		font-size: 1.3em;
+}
+
+body.ficha table tr td.remove{
+	text-align: center;
+	padding: 0px;
+	
+}
+
+
+
+body.ficha table tr td.remove a{
+		display: block;
+		width: 100%;
+		color: rgb(255, 0, 0); 
+		
+}
+
+body.ficha table tr td.remove a:hover{
+	
+	color: rgb(200, 0, 0);
+	
+}
+
+body.ficha .conten a.procesar{
+		max-width: 120px;
+}
+
+body.ficha  .asign{
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	height: 130px;
+	overflow: scroll;
+	overflow-x: hidden;
+	margin-bottom: 5px;
+}
+
+@media screen and (min-width: 500px) {
+	body.ficha ul li.min{
+		width: 49%;
+				
+	}
+
+	body.ficha ul li.minn{
+		width: 24%;
+				
+	}
+
+	body.ficha ul li.miin{
+		width: 73%;
+				
+	}
+
+	body.ficha ul li.miinn{
+		width: 36.1%;
+				
+	}
+
+	body.ficha div.conten ul li{
+		margin-bottom: 5px;
+		display: inline-block;
+		
+	}
+
+	
+}
+
+@media screen and (max-width: 500px) {
+	body.ficha .conten a{
+		display: block;
+		width: 100%;
+		border: 0px;
+		border-radius: 0px;
+		line-height: 2em;
+	}
+	body.ficha .conten a.btn.btn-info.subir {
+		width: 46%;
+		float: right;
+		border: 1px;
+		border-radius: 4px;
+		height: 120px;
+		padding-top: 48px;
+		margin-right: 2px;
+		margin-top: 3px;
+	}
+
+	body.ficha .conten img#preview {
+		width: 46%;
+		height: 120px;
+		margin: 3px;
+	}
+
+	body.ficha .conten a.procesar{
+		position: fixed;
+		bottom: 0px;
+		margin: 0px;
+		max-width: 100%;
+		
+
+	}
+
+	body.ficha .btn-file{
+		
+		max-width: 100%;
+		font-size: 1.5em;
+		width: 100%;
+		border: 0px;
+		border-radius: 0px;
+
+	}
+
+	body.ficha .conten a.procesar.pro{
+		
+		box-shadow: 0px 218px 113px 217px rgba(10, 206, 255, 0.70);
+
+	}
+
+	body.ficha .conten a.procesar.edit{
+		
+		box-shadow: 0px 218px 113px 217px rgba(207, 174, 0, 0.70);
+
+	}
+
+	body.ficha .conten a.procesar.abajo{
+		
+		box-shadow: 0px 218px 113px 217px rgba(255, 255, 255, 0);
+
+	}
+
+	body.ficha div.conten ul {
+		margin-left: 2px;
+		margin-right: 2px;
+			
+	}
+
+	body.ficha .tabl{
+		width: 100%;
+	}
+
+	body.ficha .conten{
+		width: 100%;
+		border: none;
+
+	}
+
+	body.ficha ul.final{
+		margin-bottom: 50px;
+
+	}
+
+}
+
+
+body.ficha div.conten .input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
+	height: 35px;
+
+}
+
+body.ficha textarea#DESC_FIC,  textarea#NOTA{
+	height: 80px;
+
+}
+
+body.despacho{
+transition: all .25s ease-in-out;
+}
+
+
+.rot90{
+	-webkit-transform: rotate(90deg);
+	-moz-transform: rotate(90deg);
+	rotation: 90deg;
+	filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+}
+
+.rot180{
+	-webkit-transform: rotate(180deg);
+	-moz-transform: rotate(180deg);
+	rotation: 180deg;
+	filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+}
+
+.rot270{
+	-webkit-transform: rotate(270deg);
+	-moz-transform: rotate(270deg);
+	rotation: 270deg;
+	filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+}
+
+
+
+

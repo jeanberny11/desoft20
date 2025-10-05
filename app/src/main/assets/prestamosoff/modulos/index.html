@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Desoftinf</title>
+	<script src="../js/jquery.min.js"></script>
+	 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <link rel="stylesheet" href="../css/bootstrap.css" type="text/css" />
+  <link rel="stylesheet" href="../css/font-awesome.min.css" type="text/css" />
+  <link rel="stylesheet" href="../css/font.css" type="text/css" cache="false" />
+  <link rel="stylesheet" href="../css/app.css" type="text/css" />
+
+  <script type="text/javascript" src="/lib/alertify.js"></script>
+<link rel="stylesheet" href="../themes/alertify.core.css" />
+<link rel="stylesheet" href="../themes/alertify.default.css" />
+
+<link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="icon" type="image/png" href="../favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="../favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="../manifest.json">
+<link rel="mask-icon" href="../safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+<style>
+	nav.navbar.navbar-inverse {
+    width: 100%;
+    position: fixed;
+    border-radius: 0px;
+    top: 0px;
+    z-index: 9999999;
+}
+.sync {
+    width: 90%;    
+    margin: auto;
+    margin-top: 110px;
+    text-align: center;
+    font-size: 80px;
+}
+#div_carga {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(36, 35, 35, 0.5);
+  
+  z-index: 101; }
+  /* line 17, C:/sistemas/123456/general.scss */
+  #div_carga #cargador {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -25px;
+    margin-left: -25px; }
+</style>
+</head>
+<body>
+<div id="div_carga" style="display: none;" class="cargar">
+	<img id="cargador" src="../images/ajax-loader.gif"/>
+</div>	
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Sync</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        
+        <li>
+        	<a href="index.html">
+        		<i class="fa fa-refresh"></i> refresh
+        	</a>
+        </li>
+        <li>
+        	<a href="cobrosm.html">
+        		<i class="fa fa-money"></i> Cobros
+        	</a>
+        </li>
+        
+      </ul>        
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="sync" style="">
+	<i class="fa fa-database" aria-hidden="true"></i>
+	<i class="fa fa-exchange"></i>
+	<i class="fa fa-cloud" aria-hidden="true"></i>
+	<br>
+	<button type="button" class="btn btn-info" id="btn-sync" style="font-size: 16px;width: 100%;height: 45px;"> 
+		<i class="fa fa-refresh"></i> Sincronizar
+	</button>
+	<button type="button" class="btn btn-default" id="btn-back" style="font-size: 16px;width: 100%;height: 45px;"> 
+		<i class="fa fa-download"></i> Backup
+	</button>
+	<a href="" download="backupcobros.txt" id="desca" style="display: none;"></a>
+</div>
+
+</body>
+<!-- Bootstrap -->
+<script src="../js/bootstrap.js"></script>
+<!-- app -->
+<script src="../js/app.js"></script>
+<script src="../js/app.plugin.js"></script>
+<script src="../js/app.data.js"></script>
+<script src="../js/undercore.js"></script>
+<script type="text/javascript">
+$(document).ready(function () {	
+	
+	$(document).on('click', '#btn-sync', function(){
+		$('#div_carga').show();
+		var busq = [];  
+		var cobrosbt = JSON.parse(localStorage.getItem('cobros'));
+		busq= _.filter(cobrosbt, function(detalle){
+	      return detalle.ref_cob == "CL";
+	    });
+		if(busq.length>0){
+		    localStorage.setItem('backupcobros', JSON.stringify(busq));
+	    }
+
+	    var step1, step2;
+		step1 = $.ajax({
+			url: 'http://inversionesjimenez.desoftinf.com/prestamos-sel.php',
+			type: 'post',
+			data: {bal_pre:'-5', cobrador:localStorage.getItem('cobrador')},
+			dataType: 'json',               
+		})
+		.done(function(data) {
+			localStorage.setItem('prestamos', JSON.stringify(data));
+		  //console.log(JSON.parse(localStorage.getItem('login')) );  
+		})
+		.fail(function(jqXHR, textStatus, errorThrown) {
+			$('#div_carga').hide();
+			if (jqXHR.status === 0) {
+			    alertify.error('Sin concexion a internet: Trabajara de modo local.');
+			} else if (jqXHR.status == 404) {
+			    alertify.error('Pagina no encontrada [404]');
+			} else if (jqXHR.status == 500) {
+			    alertify.error('Error interno de el servidor [500].');
+			} else if (textStatus === 'parsererror') {
+			    alertify.error('Requested JSON parse failed.');
+			} else if (textStatus === 'timeout') {
+			    alertify.error('Tiempo de espera expirado');
+			} else if (textStatus === 'abort') {
+			    alertify.error('Proceso abortado');
+			} else {
+			    alertify.error('Uncaught Error: ' + jqXHR.responseText);
+			}
+		});
+
+		step2 = step1.then(
+			function (data) {
+		    	var def = new $.Deferred();
+		    	
+		    	$.ajax({
+					url: 'http://inversionesjimenez.desoftinf.com/cobros-bt.php',
+					type: 'post',
+					data: {cobrador:localStorage.getItem('cobrador')},
+					dataType: 'json',               
+				})
+				.done(function(data) {
+					localStorage.setItem('cobros', JSON.stringify(data));
+				  //console.log(JSON.parse(localStorage.getItem('login')) );  
+				})
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					$('#div_carga').hide();
+					if (jqXHR.status === 0) {
+					    alertify.error('Sin concexion a internet: Trabajara de modo local.');
+					} else if (jqXHR.status == 404) {
+					    alertify.error('Pagina no encontrada [404]');
+					} else if (jqXHR.status == 500) {
+					    alertify.error('Error interno de el servidor [500].');
+					} else if (textStatus === 'parsererror') {
+					    alertify.error('Requested JSON parse failed.');
+					} else if (textStatus === 'timeout') {
+					    alertify.error('Tiempo de espera expirado');
+					} else if (textStatus === 'abort') {
+					    alertify.error('Proceso abortado');
+					} else {
+					    alertify.error('Uncaught Error: ' + jqXHR.responseText);
+					}
+				});
+
+
+				$.ajax({
+					url: 'http://inversionesjimenez.desoftinf.com/cobros-f.php',
+					type: 'post',
+					data: {cobrador:localStorage.getItem('cobrador')},
+					dataType: 'json',               
+				})
+				.done(function(data) {
+					localStorage.setItem('cobros-f', JSON.stringify(data));
+				  //console.log(JSON.parse(localStorage.getItem('login')) ); 
+				  	def.resolve();
+		    		return def.promise(); 
+				})
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					$('#div_carga').hide();
+					if (jqXHR.status === 0) {
+					    alertify.error('Sin concexion a internet: Trabajara de modo local.');
+					} else if (jqXHR.status == 404) {
+					    alertify.error('Pagina no encontrada [404]');
+					} else if (jqXHR.status == 500) {
+					    alertify.error('Error interno de el servidor [500].');
+					} else if (textStatus === 'parsererror') {
+					    alertify.error('Requested JSON parse failed.');
+					} else if (textStatus === 'timeout') {
+					    alertify.error('Tiempo de espera expirado');
+					} else if (textStatus === 'abort') {
+					    alertify.error('Proceso abortado');
+					} else {
+					    alertify.error('Uncaught Error: ' + jqXHR.responseText);
+					}
+				});				
+		    	
+		  	},
+		  	function (err) {
+		        console.log('Step1 failed: Ajax request');
+		    }
+		);
+
+		step2.done(function () {
+			if(busq.length>0){		    	
+		    	$.each(busq, function(index, val) {
+		    		
+		    		$.ajax({
+						url: 'http://inversionesjimenez.desoftinf.com/cobros-glc.php',
+						type: 'post',
+						data: {cobro:busq[index]},
+						dataType: 'json',               
+					})
+					.done(function(data) {
+						//localStorage.setItem('cobros-f', JSON.stringify(data));
+					  console.log( data );  
+					})
+					.fail(function(jqXHR, textStatus, errorThrown) {
+						$('#div_carga').hide();
+						if (jqXHR.status === 0) {
+						    alertify.error('Sin concexion a internet: Trabajara de modo local.');
+						} else if (jqXHR.status == 404) {
+						    alertify.error('Pagina no encontrada [404]');
+						} else if (jqXHR.status == 500) {
+						    alertify.error('Error interno de el servidor [500].');
+						} else if (textStatus === 'parsererror') {
+						    alertify.error('Requested JSON parse failed.');
+						} else if (textStatus === 'timeout') {
+						    alertify.error('Tiempo de espera expirado');
+						} else if (textStatus === 'abort') {
+						    alertify.error('Proceso abortado');
+						} else {
+						    alertify.error('Uncaught Error: ' + jqXHR.responseText);
+						}
+					});
+
+					if(busq.length-1 == index){
+						console.log("ddd"+index);
+					}
+		    	});
+		    	$('#div_carga').hide();
+		    }
+		    $('#div_carga').hide();
+		});
+
+	    
+	});
+
+	$('#div_carga').hide().ajaxStart(function() {
+		console.log('dsfsd');
+	  	if($(this).hasClass('cargar')){
+	  		$(this).show();
+	  	}	    
+	}).ajaxStop(function() {
+	    $(this).hide();
+	});
+
+	(function () {
+		var textFile = null,
+		  makeTextFile = function (text) {
+		    var data = new Blob([text], {type: 'text/plain'});
+
+		    // If we are replacing a previously generated file we need to
+		    // manually revoke the object URL to avoid memory leaks.
+		    if (textFile !== null) {
+		      window.URL.revokeObjectURL(textFile);
+		    }
+
+		    textFile = window.URL.createObjectURL(data);
+
+		    return textFile;
+		  };
+
+
+		  var create = document.getElementById('btn-back');
+		  var textbox = localStorage.getItem('cobros');
+
+		  create.addEventListener('click', function () {
+		    var link = document.getElementById('desca');
+		    link.href = makeTextFile(textbox);
+		    //link.style.display = 'block';
+		    
+		    link.download = "backupcobros.txt";
+			document.getElementById("desca").click();
+		  }, false);
+		})();
+
+
+});
+</script>
+</html>

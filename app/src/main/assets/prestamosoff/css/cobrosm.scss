@@ -1,0 +1,225 @@
+li{
+    &.gra {
+        width: 79%;
+    }
+    &.gra1 {
+        width: 99%;
+    }  
+    &.med {
+        width: 33.5%;
+    }
+    &.med2 {
+        width: 54%;
+    }
+
+    &.min {
+        width: 19%;
+    }
+    &.min1 {
+        width: 4%;
+    }
+
+    &.min2 {
+        width: 24%;
+    }
+    &.min3 {
+        width: 29%;
+    }
+
+    &.list-group-item {
+        width: 100%;
+        padding: 0px;
+        height: 40px;
+    }   
+}
+
+.wrapper {
+    padding: 0px;
+}
+
+.msgimp{
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    top: 0px;
+    background-color: rgba(10, 10, 10, 0.52);
+    left: 0px;
+    z-index: 999;
+    .opciones {
+        width: 150px;
+        max-width: 150px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    button{
+        width:100%;
+        border-radius:0pc;
+    }
+}
+
+.list-group .form-group {
+    margin-bottom: 0px;
+    width: 13em;
+    float: right;
+}
+
+td.remove a {
+    color: red;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+tbody#detalle-facturas tr{
+    cursor: pointer;
+}
+
+#PREA_ART, #PREB_ART, #PREE_ART {
+    font-size: large;
+    padding: 0px;
+    height: 25px;
+    text-align: right;
+    padding-right: 6px;
+    background-color: white;
+}
+
+.panel .table {
+    th[scope] {
+        text-align: left;
+        padding-right: 5px;
+    }
+}
+
+#COS_ART {
+    font-size: large;
+}
+
+.panel > .list-group .list-group-item {
+    padding: 13px 0px 0px 0px;
+}
+
+.epre{
+    font-size: large;
+}
+
+.list-group input {
+    border: none;
+    height: 40px;
+}
+
+.content-pro {
+   min-width: 580px;
+   div#botones{
+        margin-right: auto;
+        margin-left: auto;
+        width: 100%;
+        max-width: 430px;
+        text-align: center;
+    }
+}
+
+html.firefox .panel > .list-group .list-group-item {
+    border-width: 1px 0px;
+    border-radius: 0px;
+    margin-bottom: -4px;
+}
+
+
+.conten {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 0px;
+    border-radius: 0px;
+    max-width: 850px;
+    background: rgba(147, 149, 150, 0.45);
+    color: black;
+    overflow: hidden;
+    .tabl{
+        overflow: hidden;
+    }
+}
+
+.botones {
+    width: 25%;
+    margin: 0px;
+    border: 0px;
+    border-radius: 0px;
+    height: 45px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.msgimp {
+    width: 100%;
+    position: absolute;
+    height: 100%;
+    top: 0px;
+    background-color: rgba(10, 10, 10, 0.52);
+    left: 0px;
+    z-index: 999;
+}
+.msgimp .opciones {
+    width: 150px;
+    max-width: 150px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.msgimp button {
+    width: 100%;
+    border-radius: 0pc;
+}
+tbody#detalle-productos tr{
+    cursor: pointer;
+}
+table.cuota {
+    font-size: 14px;
+    thead tr {
+        display: block;
+    }
+}
+tbody.cuotas {
+    height: 200px;
+    overflow: hidden;
+    display: block;
+    overflow-y: scroll;
+    width: 100%;
+}
+.recibo{
+    transform:  translate(300%, 1000%);
+    &.centror{
+        transform:  translate(0%, -58%);
+        position: absolute;
+    }
+}
+
+@media screen and (max-width:941px){
+    .list-group .form-group {
+
+        width: 12em;
+
+    }
+}
+
+@media screen and (max-width:893px){
+    .list-group .form-group {
+
+        width: 11em;
+
+    }
+}
+
+@media screen and (max-width:847px){
+    .list-group .form-group {
+
+        width: 10em;
+
+    }
+}
+
+@media screen and (max-width:847px){
+    .list-group .form-group {
+
+        width: 9em;
+
+    }
+}

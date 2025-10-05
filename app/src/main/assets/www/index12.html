@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="iso-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="PrintWeb_App.css" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="jquery-1.11.3.min.js"></script>
+<script src="wwb11.min.js"></script>
+<script src="AndroidSdk.js"></script>
+</head>
+<body>
+<form name="Layer1" method="post" onsubmit="return imprimir()" enctype="text/plain" id="Layer2">
+   <input type="submit" id="Button1" name="" value="Imprimir">
+   <input type="button" id="Button2" name="" onclick="TestPrint()" value="Print. Ejemplo">
+   <input type="text" id="printer" name="printer" value="RPP300-E" autocomplete="off" placeholder="Name" required>
+   <textarea name="texto" id="texto" rows="4" cols="33" autofocus="" placeholder="Texto" required></textarea>
+   <label for="" id="Label3">Texto:</label>
+   <label for="" id="Label4">Impresora:</label>
+   <div id="wb_Image1">
+      <img src="images/printer.png" id="Image1" alt=""></div>
+   <label for="" id="Label1">Sdk Create by Genesis Santana, FastApp Inc.</label>
+   <div id="wb_Text1">
+      <span style="color:#000000;font-family:Arial;font-size:13px;"><a href="javascript:popupwnd('./Doc.html','no','no','no','no','no','no','','','','')" target="_self">Documentación</a></span></div>
+</form>
+
+<script>
+
+   function imprimir(){
+
+        if(AndroidSdk.Conectado()){
+
+            var text = document.getElementById('texto').value;
+            var printer = document.getElementById('printer').value;
+
+            AndroidSdk.resetPrint();
+
+            AndroidSdk.PrintTaggedText(text);
+
+            AndroidSdk.FeedPaper(130);
+
+            AndroidSdk.OpenPrinter(printer);
+
+        }else{
+
+            alert('AndroidPrint no existe.');
+        }
+
+        return false;
+   }
+
+ function TestPrint(){
+
+     var texto = "";
+
+      texto += "{reset}{center}{b}{h}FastApp Inc.{br}";
+      texto += "{reset}{center}{b}458653258{br}{br}";
+
+      texto += "{reset}{center}{b}PEDIDO{br}{br}";
+
+      texto += "{reset}{center}--------------------------------{br}";
+      texto += "{reset}{b}Documento:{reset} 2017000001{br}";
+      texto += "{reset}{b}Vendedor:{reset} Genesis Santana{br}";
+      texto += "{reset}{b}Fecha:{reset} 15/03/2017 12:35 p.m.{br}";
+      texto += "{reset}{b}Cliente:{reset} Juan Carlos Martinez{br}";
+      texto += "{reset}{b}Telefono:{reset} 829-877-5773{br}";
+      texto += "{reset}{b}Condición:{reset} AL CONTADO{br}";
+
+      //Heder productos
+      texto += "{reset}{center}------------------------------------------------{br}";
+      texto += "{reset}{left}{b}{s}CODIGO  DESCRIPCION                                     PRECIO{/s}{br}";
+      texto += "{reset}{center}------------------------------------------------{br}";
+
+        //Detalle productos
+
+       texto += "{reset}{left}{s}2563  Arror Blanco{br}";
+       texto += "{reset}{right}{s}   Unidad  3 X 300.00   900.00{br}";
+
+       texto += "{reset}{left}{s}2563  Habichuelas Rojas{br}";
+       texto += "{reset}{right}{s}   Libra  6 X 100.00   600.00{br}";
+
+       texto += "{reset}{left}{s}2563  Yuca Del Baye{br}";
+       texto += "{reset}{right}{s}   Libra  20 X 50.00   1,000.00{br}";
+
+
+       //Crear Pie del recibo
+
+        var subTotalText = "2,500.00";
+
+        texto +="{reset}{center}------------------------------------------------{br}";
+
+        texto +="{reset}{left}{s}";
+        var subtotal = "Sub Total:                                ".substring(0, (42 - ("RD$ " + subTotalText).length)) + "{right}RD$ " + subTotalText + "{br}";
+
+        texto += subtotal;
+
+        texto +="{reset}{center}------------------------------------------------{br}{br}";
+
+        texto +="{reset}{right}{b}";
+
+        subtotal = "Sub Total:               ".substring(0, (25 - subTotalText.length)) + "{/b}2,500.00{br}";
+
+        texto += subtotal;
+
+
+        texto += "{reset}{right}{b}";
+        subtotal = "    Itbis:               ".substring(0, (25 - ("0.00").length)) + "{/b}0.00{br}";
+        texto += subtotal;
+
+        texto += "{reset}{right}----------------{br}";
+
+        texto += "{reset}{right}{b}";
+        var total = "Total:               ".substring(0, (21 - ("2,500.00").length)) + "2,500.00{br}{br}";
+        texto +=total;
+
+
+        texto += "{reset}{center}--------------------------------{br}";
+        texto += "{reset}{center}Firma del Cliente.{br}";
+        texto += "{br}";
+        texto += "{br}";
+
+        texto += "{reset}{center}Gracias por preferirnos.{br}";
+        texto += "{br}";
+
+        if(AndroidSdk.Conectado()){
+
+            var printer = document.getElementById('printer').value;
+
+            AndroidSdk.resetPrint();
+
+            AndroidSdk.PrintTaggedText(texto);
+
+            AndroidSdk.FeedPaper(140);
+
+            AndroidSdk.OpenPrinter(printer);
+        }
+ }
+
+</script>
+
+</body>
+</html>
