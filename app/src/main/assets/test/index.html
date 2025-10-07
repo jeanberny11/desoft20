@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Android Interface Test Suite</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Android Interface Test Suite</h1>
+            <p>Test all AndroidInterface methods</p>
+            <span class="status-indicator status-ready" id="statusIndicator"></span>
+        </div>
+
+        <div class="console" id="console">
+            <div class="console-line console-info">Console ready. Waiting for tests...</div>
+        </div>
+
+        <div class="content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="btn btn-small btn-success" onclick="testAll()">Run All Tests</button>
+                <button class="btn btn-small btn-secondary" onclick="expandAll()">Expand All</button>
+                <button class="btn btn-small btn-secondary" onclick="collapseAll()">Collapse All</button>
+                <button class="btn btn-small btn-warning" onclick="clearConsole()">Clear Console</button>
+            </div>
+
+            <!-- Category 1: Printing -->
+            <div class="category" id="cat-printing">
+                <div class="category-header" onclick="toggleCategory('cat-printing')">
+                    <h2>🖨️ Printing</h2>
+                    <span class="category-badge">2 methods</span>
+                </div>
+                <div class="category-content">
+                    <!-- Test: Print Generic -->
+                    <div class="test-group">
+                        <span class="test-label">1. Print Generic Data</span>
+                        <div class="input-group">
+                            <label>Printer Name (optional)</label>
+                            <input type="text" id="genericPrinterName" placeholder="Leave empty for default">
+                        </div>
+                        <button class="btn btn-small" onclick="fillSampleReceipt('generic')">Load Sample Receipt</button>
+                        <div class="input-group">
+                            <label>Print Data (JSON)</label>
+                            <textarea id="genericPrintData">{
+  "printerName": "",
+  "lines": [
+    {"type": "TEXT", "text": "Test Print", "alignment": 1, "size": 2, "bold": true},
+    {"type": "FEED"},
+    {"type": "TEXT", "text": "This is a test", "alignment": 1},
+    {"type": "FEED"},
+    {"type": "CUTTER"}
+  ]
+}</textarea>
+                        </div>
+                        <button class="btn" onclick="testPrintGeneric()">Print Generic</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Test: Print Sunmi -->
+                    <div class="test-group">
+                        <span class="test-label">2. Print Sunmi Data</span>
+                        <div class="input-group">
+                            <label>Printer Name (optional)</label>
+                            <input type="text" id="sunmiPrinterName" placeholder="Leave empty for default">
+                        </div>
+                        <button class="btn btn-small" onclick="fillSampleReceipt('sunmi')">Load Sample Receipt</button>
+                        <div class="input-group">
+                            <label>Print Data (JSON)</label>
+                            <textarea id="sunmiPrintData">{
+  "printerName": "",
+  "lines": [
+    {"type": "TEXT", "text": "Sunmi Test", "alignment": 1, "size": 2, "bold": true},
+    {"type": "FEED"},
+    {"type": "CUTTER"}
+  ]
+}</textarea>
+                        </div>
+                        <button class="btn" onclick="testPrintSunmi()">Print Sunmi</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 2: Device Features -->
+            <div class="category" id="cat-device">
+                <div class="category-header" onclick="toggleCategory('cat-device')">
+                    <h2>📱 Device Features</h2>
+                    <span class="category-badge">3 methods</span>
+                </div>
+                <div class="category-content">
+                    <div class="test-group">
+                        <span class="test-label">4. Get Device ID</span>
+                        <button class="btn" onclick="testGetDeviceId()">Get Device ID</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">8. Get Last Location</span>
+                        <button class="btn" onclick="testGetLocation()">Get GPS Location</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">9. Read Barcode</span>
+                        <button class="btn" onclick="testReadBarcode()">Scan Barcode</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 3: File Operations -->
+            <div class="category" id="cat-files">
+                <div class="category-header" onclick="toggleCategory('cat-files')">
+                    <h2>📁 File Operations</h2>
+                    <span class="category-badge">4 methods</span>
+                </div>
+                <div class="category-content">
+                    <div class="test-group">
+                        <span class="test-label">10. Download File</span>
+                        <div class="input-group">
+                            <label>File URL</label>
+                            <input type="text" id="downloadUrl" value="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf">
+                        </div>
+                        <div class="input-group">
+                            <label>Filename (optional)</label>
+                            <input type="text" id="downloadFilename" placeholder="Leave empty for auto">
+                        </div>
+                        <div class="input-group">
+                            <label>MIME Type (optional)</label>
+                            <input type="text" id="downloadMime" placeholder="e.g., application/pdf">
+                        </div>
+                        <button class="btn" onclick="testDownloadFile()">Download File</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">11. Open Downloaded File</span>
+                        <div class="input-group">
+                            <label>Filename</label>
+                            <input type="text" id="openFilename" placeholder="e.g., document.pdf">
+                        </div>
+                        <button class="btn" onclick="testOpenFile()">Open File</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">15. Get Desoftinf Images</span>
+                        <button class="btn" onclick="testGetImages()">List Images</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 4: Sharing -->
+            <div class="category" id="cat-sharing">
+                <div class="category-header" onclick="toggleCategory('cat-sharing')">
+                    <h2>📤 Sharing</h2>
+                    <span class="category-badge">3 methods</span>
+                </div>
+                <div class="category-content">
+                    <div class="test-group">
+                        <span class="test-label">12. Send WhatsApp Image (Legacy)</span>
+                        <div class="input-group">
+                            <label>Image Name</label>
+                            <input type="text" id="whatsappImageName" value="receipt.jpg">
+                        </div>
+                        <div class="input-group">
+                            <label>Message</label>
+                            <input type="text" id="whatsappMessage" value="Here's your receipt">
+                        </div>
+                        <button class="btn" onclick="testSendWhatsApp()">Send to WhatsApp</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">13. Share Image (Modern)</span>
+                        <div class="input-group">
+                            <label>Image Name</label>
+                            <input type="text" id="shareImageName" value="photo.jpg">
+                        </div>
+                        <div class="input-group">
+                            <label>Message</label>
+                            <input type="text" id="shareMessage" value="Check this out">
+                        </div>
+                        <div class="input-group">
+                            <label>Package Name (empty for chooser)</label>
+                            <select id="sharePackage">
+                                <option value="">Show Chooser</option>
+                                <option value="com.whatsapp">WhatsApp</option>
+                                <option value="com.instagram.android">Instagram</option>
+                                <option value="com.facebook.katana">Facebook</option>
+                                <option value="com.twitter.android">Twitter</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="testShareImage()">Share Image</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">14. Share Multiple Images</span>
+                        <div class="input-group">
+                            <label>Image Names (comma-separated)</label>
+                            <input type="text" id="multipleImages" value="image1.jpg, image2.jpg, image3.jpg">
+                        </div>
+                        <div class="input-group">
+                            <label>Message</label>
+                            <input type="text" id="multipleMessage" value="My photos">
+                        </div>
+                        <div class="input-group">
+                            <label>Package Name</label>
+                            <select id="multiplePackage">
+                                <option value="">Show Chooser</option>
+                                <option value="com.whatsapp">WhatsApp</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="testShareMultiple()">Share Multiple</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category 5: Utilities -->
+            <div class="category" id="cat-utilities">
+                <div class="category-header" onclick="toggleCategory('cat-utilities')">
+                    <h2>⚙️ Utilities & Configuration</h2>
+                    <span class="category-badge">4 methods</span>
+                </div>
+                <div class="category-content">
+                    <div class="test-group">
+                        <span class="test-label">3. Clear WebView History</span>
+                        <button class="btn" onclick="testClearHistory()">Clear History</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">5. Hide Keyboard</span>
+                        <button class="btn" onclick="testHideKeyboard()">Hide Keyboard</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">6. Update Configuration</span>
+                        <div class="input-group">
+                            <label>Remote URL</label>
+                            <input type="text" id="configRemoteUrl" value="https://example.com/app">
+                        </div>
+                        <div class="input-group">
+                            <label>Local URL</label>
+                            <input type="text" id="configLocalUrl" value="file:///android_asset/app/index.html">
+                        </div>
+                        <div class="input-group">
+                            <label>Use Local URL</label>
+                            <select id="configUseLocal">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Printer Name</label>
+                            <input type="text" id="configPrinterName" value="BlueTooth Printer">
+                        </div>
+                        <div class="input-group">
+                            <label>Enable Web Navigation</label>
+                            <select id="configWebNav">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="testUpdateConfig()">Update Config</button>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="test-group">
+                        <span class="test-label">7. Open in Browser</span>
+                        <div class="input-group">
+                            <label>URL</label>
+                            <input type="text" id="browserUrl" value="https://www.google.com">
+                        </div>
+                        <button class="btn" onclick="testOpenBrowser()">Open Browser</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

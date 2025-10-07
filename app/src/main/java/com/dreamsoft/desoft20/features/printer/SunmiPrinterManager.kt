@@ -182,7 +182,7 @@ class SunmiPrinterManager private constructor() {
                 printBarCode(line.text,symbology,162,2,2)
             }
             PrintType.IMAGE -> {
-                val image = ImageHelper.base64ToBitmap(line.text)
+                val image = ImageHelper.base64ToBitmapOptimized(line.text)
                 if (image != null) {
                     printBitmap(image,0)
                 }else{

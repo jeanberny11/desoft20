@@ -2,8 +2,10 @@ package com.dreamsoft.desoft20.di
 
 import android.content.Context
 import com.dreamsoft.desoft20.features.bluetooth.BluetoothManager
+import com.dreamsoft.desoft20.features.download.DownloadManager
 import com.dreamsoft.desoft20.features.location.LocationManager
 import com.dreamsoft.desoft20.features.printer.GenericPrinterManager
+import com.dreamsoft.desoft20.features.share.ShareManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,4 +32,16 @@ object FeatureModule {
     @Singleton
     fun provideBluetoothManager(
     ): BluetoothManager = BluetoothManager()
+
+    @Provides
+    @Singleton
+    fun provideDownloadManager(
+        @ApplicationContext context: Context
+    ): DownloadManager = DownloadManager(context)
+
+    @Provides
+    @Singleton
+    fun provideShareManager(
+        @ApplicationContext context: Context
+    ): ShareManager = ShareManager(context)
 }

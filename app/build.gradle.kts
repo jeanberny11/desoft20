@@ -15,7 +15,7 @@ android {
     defaultConfig {
         applicationId = "com.dreamsoft.desoft20"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -24,21 +24,55 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Set language resources to reduce APK size
+        resourceConfigurations += listOf("en", "es")
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../deamsoftapprelease.keystore")  // Path to your keystore
+            storePassword = "Jeanbernygay1123992@@"  // Your keystore password
+            keyAlias = "dreamsoft_key"        // Your key alias
+            keyPassword = "Jeanbernygay1123992@@"    // Your key password (or different if you set one)
+        }
+    }
+
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Optional: Split APKs by ABI (reduces size)
+            ndk {
+                abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            }
         }
         debug {
             isMinifyEnabled = false
             isDebuggable = true
         }
     }
+
+    // Android App Bundle configuration
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+        }
+    }
+
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -50,11 +84,12 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
 
-//    composeOptions {
-//        kotlinCompilerExtensionVersion = "1.5.8"
-//    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.8"
+    }
 
     packaging {
         resources {
@@ -64,6 +99,12 @@ android {
 }
 
 dependencies {
+
+    // Add if not present - useful for production
+    implementation("androidx.work:work-runtime-ktx:2.10.5")  // Background tasks
+    implementation("com.google.android.play:review-ktx:2.0.2")  // In-app reviews
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
+
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.appcompat:appcompat:1.7.1")
     implementation("com.google.android.material:material:1.13.0")

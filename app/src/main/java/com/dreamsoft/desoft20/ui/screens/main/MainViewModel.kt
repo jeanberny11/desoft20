@@ -13,6 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.dreamsoft.desoft20.data.models.AppConfiguration
 import com.dreamsoft.desoft20.data.repositories.ConfigurationRepository
 import com.dreamsoft.desoft20.features.barcode.BarcodeResult
+import com.dreamsoft.desoft20.features.download.DownloadManager
+import com.dreamsoft.desoft20.features.download.models.DownloadRequest
+import com.dreamsoft.desoft20.features.download.models.DownloadResult
 import com.dreamsoft.desoft20.features.location.LocationManager
 import com.dreamsoft.desoft20.features.location.models.LocationData
 import com.dreamsoft.desoft20.features.location.models.LocationResult
@@ -20,6 +23,9 @@ import com.dreamsoft.desoft20.features.printer.GenericPrinterManager
 import com.dreamsoft.desoft20.features.printer.SunmiPrinterManager
 import com.dreamsoft.desoft20.features.printer.models.PrintData
 import com.dreamsoft.desoft20.features.printer.models.PrinterResult
+import com.dreamsoft.desoft20.features.share.ShareManager
+import com.dreamsoft.desoft20.features.share.models.ShareRequest
+import com.dreamsoft.desoft20.features.share.models.ShareResult
 import com.dreamsoft.desoft20.utils.extentions.UtilsHelper
 import com.dreamsoft.desoft20.utils.network.NetworkUtils
 import com.dreamsoft.desoft20.webview.WebViewCallbacks
@@ -79,6 +85,8 @@ class MainViewModel @Inject constructor(
     private val networkUtils: NetworkUtils,
     private val printerManager: GenericPrinterManager,
     private val locationManager: LocationManager,
+    private val downloadManager: DownloadManager,
+    private val shareManager: ShareManager
 ) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<MainUiState>(MainUiState.Loading("Inicializando..."))
@@ -119,7 +127,7 @@ class MainViewModel @Inject constructor(
                 configurationRepository.saveConfiguration(config)
             }
             if (config.localUrl.isEmpty()) {
-                config = config.copy(localUrl = "file:///android_asset/prestamosoff/index.html")
+                config = config.copy(localUrl = "file:///android_asset/test/index.html")
                 configurationRepository.saveConfiguration(config)
             }
             val url: String = if (config.useLocalUrl) {
@@ -171,7 +179,14 @@ class MainViewModel @Inject constructor(
                 },
                 onReadBarcode = {
 
-                }
+                },
+                onDownloadFile = { onDownloadFileTrigger(it) },
+                onOpenFile = { onOpenFileTrigger(it) },
+                onShareImage = { onShareImageTrigger(it) },
+                onShareMultipleImages = { images, message, pkg ->
+                    onShareMultipleImagesTrigger(images, message, pkg)
+                },
+                onGetDesoftinfImages = { shareManager.getDesoftinfImages() }
             )
             _uiState.value = MainUiState.Initial(
                 currentUrl = url,
@@ -426,19 +441,6 @@ class MainViewModel @Inject constructor(
         _uiState.value = state
     }
 
-    fun onRefresh(state: MainUiState.Initial) {
-        viewModelScope.launch {
-            val url: String = if (state.configuration.useLocalUrl) {
-                "file:///android_asset/prestamosoff/index.html"
-            } else {
-                state.configuration.remoteUrl.ifEmpty {
-                    "file:///android_asset/www/index.html" // Fallback
-                }
-            }
-            _uiState.value = state.copy(currentUrl = url)
-        }
-    }
-
     fun onBackPressed(state: MainUiState.Initial) {
         val config = state.configuration
         val canGoBackInWebView = state.canGoBack
@@ -452,33 +454,6 @@ class MainViewModel @Inject constructor(
             _uiState.value = MainUiState.Dialog(onDismiss = {
                 _uiState.value = state
             })
-        }
-    }
-
-    fun onWebViewIsReady(state: MainUiState.Initial, webView: WebView) {
-        // This function seems to collect events, should likely be called once.
-        // Or manage collection lifecycle carefully if called multiple times.
-        viewModelScope.launch {
-            webViewEvent.collectLatest { event -> // Use webViewEvent (the SharedFlow)
-                when (event) {
-                    is WebViewEvent.GoBack -> {
-                        if (webView.canGoBack() && state.configuration.enableWebNavigation) {
-                            webView.goBack()
-                        }
-                    }
-
-                    is WebViewEvent.ExecuteJavaScript -> {
-                        webView.post { // Ensure it runs on the UI thread
-                            webView.evaluateJavascript(event.script, null)
-                        }
-                    }
-
-                    WebViewEvent.ClearWebViewHistory -> {
-                        webView.clearFormData()
-                        webView.clearHistory()
-                    }
-                }
-            }
         }
     }
 
@@ -497,9 +472,179 @@ class MainViewModel @Inject constructor(
         exitProcess(0)
     }
 
-    fun onScanResult(barcode: String,restoreState: MainUiState) {
+    fun onScanResult(barcode: String, restoreState: MainUiState) {
         val result = BarcodeResult(resultCode = 3, message = "Exito", barcode = barcode)
-        executeJavaScript("${WebViewCallbacks.ON_LOCATION_RESULT}(${Json.encodeToString(result)})")
+        executeJavaScript("${WebViewCallbacks.ON_BARCODE_RESULT}(${Json.encodeToString(result)})")
         onStateChanged(restoreState)
+    }
+
+    private fun onDownloadFileTrigger(request: DownloadRequest) {
+        viewModelScope.launch {
+            val previousState = _uiState.value
+
+            // Check network
+            if (!networkUtils.hasNetworkConnection()) {
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${
+                        Json.encodeToString(
+                            DownloadResult(
+                                code = DownloadResult.ERROR,
+                                message = "Sin conexión a internet"
+                            )
+                        )
+                    })"
+                )
+                return@launch
+            }
+
+            _uiState.value = MainUiState.Loading("Descargando archivo...")
+
+            try {
+                downloadManager.downloadFile(request).collect { result ->
+                    when (result.code) {
+                        DownloadResult.IN_PROGRESS -> {
+                            _uiState.value = MainUiState.Loading(result.message)
+                            executeJavaScript(
+                                "${WebViewCallbacks.ON_DOWNLOAD_PROGRESS}(${
+                                    Json.encodeToString(
+                                        result
+                                    )
+                                })"
+                            )
+                        }
+
+                        DownloadResult.SUCCESS -> {
+                            executeJavaScript(
+                                "${WebViewCallbacks.ON_DOWNLOAD_COMPLETE}(${
+                                    Json.encodeToString(
+                                        result
+                                    )
+                                })"
+                            )
+                            _uiState.value = previousState
+                        }
+
+                        DownloadResult.ERROR -> {
+                            executeJavaScript(
+                                "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${Json.encodeToString(result)})"
+                            )
+                            _uiState.value = MainUiState.Error(
+                                result.message,
+                                onRetry = { _uiState.value = previousState }
+                            )
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("DownloadError", "Error during download", e)
+                val errorResult = DownloadResult(
+                    code = DownloadResult.ERROR,
+                    message = e.message ?: "Error desconocido"
+                )
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${Json.encodeToString(errorResult)})"
+                )
+                _uiState.value = MainUiState.Error(
+                    e.message ?: "Error en descarga",
+                    onRetry = { _uiState.value = previousState }
+                )
+            }
+        }
+    }
+
+    private fun onOpenFileTrigger(filename: String) {
+        viewModelScope.launch {
+            try {
+                val success = downloadManager.openDownloadedFile(application, filename)
+                if (!success) {
+                    executeJavaScript(
+                        "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${
+                            Json.encodeToString(
+                                DownloadResult(
+                                    code = DownloadResult.ERROR,
+                                    message = "No se pudo abrir el archivo"
+                                )
+                            )
+                        })"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("OpenFileError", "Error opening file", e)
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${
+                        Json.encodeToString(
+                            DownloadResult(
+                                code = DownloadResult.ERROR,
+                                message = e.message ?: "Error abriendo archivo"
+                            )
+                        )
+                    })"
+                )
+            }
+        }
+    }
+
+    private fun onShareImageTrigger(request: ShareRequest) {
+        viewModelScope.launch {
+            try {
+                val result = shareManager.shareImage(request)
+
+                when (result.code) {
+                    ShareResult.SUCCESS -> {
+                        executeJavaScript(
+                            "${WebViewCallbacks.ON_SHARE_SUCCESS}(${Json.encodeToString(result)})"
+                        )
+                    }
+                    ShareResult.ERROR -> {
+                        executeJavaScript(
+                            "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(result)})"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ShareError", "Error sharing image", e)
+                val errorResult = ShareResult(
+                    code = ShareResult.ERROR,
+                    message = e.message ?: "Error desconocido"
+                )
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(errorResult)})"
+                )
+            }
+        }
+    }
+
+    private fun onShareMultipleImagesTrigger(
+        imageNames: List<String>,
+        message: String,
+        packageName: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val result = shareManager.shareMultipleImages(imageNames, message, packageName)
+
+                when (result.code) {
+                    ShareResult.SUCCESS -> {
+                        executeJavaScript(
+                            "${WebViewCallbacks.ON_SHARE_SUCCESS}(${Json.encodeToString(result)})"
+                        )
+                    }
+                    ShareResult.ERROR -> {
+                        executeJavaScript(
+                            "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(result)})"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ShareError", "Error sharing images", e)
+                val errorResult = ShareResult(
+                    code = ShareResult.ERROR,
+                    message = e.message ?: "Error desconocido"
+                )
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(errorResult)})"
+                )
+            }
+        }
     }
 }

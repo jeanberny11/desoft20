@@ -12,7 +12,16 @@ object WebViewCallbacks {
 
     const val ON_LOCATION_RESULT = "AndroidInterface.onLocationResult"
 
-    const val ON_BARCODE_Result = "AndroidInterface.onBarcodeResult"
+    const val ON_DOWNLOAD_PROGRESS = "AndroidInterface.onDownloadProgress"
+    const val ON_DOWNLOAD_COMPLETE = "AndroidInterface.onDownloadComplete"
+    const val ON_DOWNLOAD_ERROR = "AndroidInterface.onDownloadError"
+
+    const val ON_BARCODE_RESULT = "AndroidInterface.onBarcodeResult"
+
+    const val ON_SHARE_SUCCESS = "AndroidInterface.onShareSuccess"
+    const val ON_SHARE_ERROR = "AndroidInterface.onShareError"
+
+
     const val ON_BARCODE_ERROR = "AndroidInterface.onBarcodeError"
     const val SET_BARCODE_FIELD_VALUE = "AndroidInterface.setBarcodeFieldValue"
 

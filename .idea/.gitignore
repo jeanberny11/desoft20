@@ -1,3 +1,7 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+# Keystore files
+*.keystore
+*.jks
+keystore.properties

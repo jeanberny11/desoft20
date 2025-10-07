@@ -2,6 +2,7 @@ package com.dreamsoft.desoft20.ui.screens.main
 
 import android.Manifest
 import android.os.Build
+import android.webkit.WebView
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +46,7 @@ import com.dreamsoft.desoft20.ui.components.FullScreenWebView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -68,6 +70,7 @@ fun MainScreen(
     var printEvent by remember { mutableStateOf<PrintRequestEvent.RequestPermissionsAndPrint?>(null) }
     var locationEvent by remember { mutableStateOf<LocationRequestEvent.RequestLocation?>(null) }
     var scanEvent by remember { mutableStateOf<ScanRequestEvent.RequestScan?>(null) }
+    var webView: WebView? by remember { mutableStateOf(null) }
 
 
     val permissionsLauncher = rememberLauncherForActivityResult(
@@ -175,6 +178,33 @@ fun MainScreen(
         }
     }
 
+    LaunchedEffect(webView, uiState) {
+        if (webView != null) {
+            viewModel.webViewEvent.collectLatest { event -> // Use webViewEvent (the SharedFlow)
+                when (event) {
+                    is WebViewEvent.GoBack -> {
+                        if (uiState is MainUiState.Initial) {
+                            if (webView!!.canGoBack() && (uiState as MainUiState.Initial).configuration.enableWebNavigation) {
+                                webView!!.goBack()
+                            }
+                        }
+                    }
+
+                    is WebViewEvent.ExecuteJavaScript -> {
+                        webView!!.post { // Ensure it runs on the UI thread
+                            webView!!.evaluateJavascript(event.script, null)
+                        }
+                    }
+
+                    WebViewEvent.ClearWebViewHistory -> {
+                        webView!!.clearFormData()
+                        webView!!.clearHistory()
+                    }
+                }
+            }
+        }
+    }
+
     // Handle back button press
     BackHandler {
         when (val currentState = uiState) {
@@ -187,19 +217,16 @@ fun MainScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        FullScreenWebView(
+            uiState = uiState,
+            onUistateChanged = {
+                viewModel.onStateChanged(it)
+            },
+            javaScriptInterface = if (uiState is MainUiState.Initial) (uiState as MainUiState.Initial).javaScriptInterface else null,
+            onWebViewIsReady = { wv ->
+                webView = wv
+            })
         when (val currentState = uiState) {
-            is MainUiState.Initial -> // Full-screen WebView
-                FullScreenWebView(
-                    uiState = currentState,
-                    onUistateChanged = {
-                        viewModel.onStateChanged(it)
-                    },
-                    onRefresh = { viewModel.onRefresh(currentState) },
-                    javaScriptInterface = currentState.javaScriptInterface,
-                    onWebViewIsReady = { webView ->
-                        viewModel.onWebViewIsReady(currentState, webView)
-                    })
-
             is MainUiState.Dialog -> AlertDialog(
                 onDismissRequest = currentState.onDismiss,
                 title = {
@@ -223,11 +250,11 @@ fun MainScreen(
                 })
 
             is MainUiState.Error -> ErrorView(
-                onRetry = currentState.onRetry,
-                errorMessage = currentState.message
+                onRetry = currentState.onRetry, errorMessage = currentState.message
             )
 
             is MainUiState.Loading -> LoadingOverlay(message = currentState.message)
+            else -> {}
         }
     }
 }

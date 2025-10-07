@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- External storage -->
+    <external-path
+        name="external_files"
+        path="." />
+
+    <!-- Downloads folder -->
+    <external-path
+        name="downloads"
+        path="Download/" />
+
+    <!-- Desoftinf folder -->
+    <external-path
+        name="desoftinf"
+        path="Desoftinf/" />
+
+    <!-- Downloads/Desoftinf folder -->
+    <external-path
+        name="downloads_desoftinf"
+        path="Download/Desoftinf/" />
+</paths>

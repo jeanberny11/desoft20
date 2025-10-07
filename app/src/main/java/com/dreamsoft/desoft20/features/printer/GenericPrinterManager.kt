@@ -11,7 +11,6 @@ import android.os.Build
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.application
 import com.dreamsoft.desoft20.features.printer.models.PrintType
 import com.dreamsoft.desoft20.features.printer.models.PrinterLine
 import com.dreamsoft.desoft20.features.printer.models.PrinterTextAlignment
@@ -33,6 +32,11 @@ class GenericPrinterManager @Inject constructor(
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_SCAN"])
     fun connect(deviceName: String): Boolean {
+        if(socket!=null || outputStream!=null){
+            disconnect()
+            socket = null
+            outputStream = null
+        }
         val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
         val bluetoothAdapter = bluetoothManager?.adapter ?: return false
         bluetoothAdapter.cancelDiscovery()
@@ -156,7 +160,7 @@ class GenericPrinterManager @Inject constructor(
                 printBarcode(line.text)
             }
             PrintType.IMAGE -> {
-                val image = ImageHelper.base64ToBitmap(line.text)
+                val image = ImageHelper.base64ToBitmapOptimized(line.text)
                 if (image != null) {
                     printImage(image)
                 }else{
