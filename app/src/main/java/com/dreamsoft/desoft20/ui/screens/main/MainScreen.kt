@@ -7,30 +7,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -42,6 +21,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dreamsoft.desoft20.R
+import com.dreamsoft.desoft20.features.barcode.BarcodeResult
 import com.dreamsoft.desoft20.ui.components.FullScreenWebView
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.journeyapps.barcodescanner.ScanContract
@@ -55,23 +35,33 @@ fun MainScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+
     // Define permissions based on Android version
     val bluetoothPermissions = remember {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) { // Android 12+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
             listOf(
-                Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT
             )
         } else {
             listOf(
-                Manifest.permission.BLUETOOTH, Manifest.permission.BLUETOOTH_ADMIN
+                Manifest.permission.BLUETOOTH,
+                Manifest.permission.BLUETOOTH_ADMIN
             )
         }
     }
+
+    val locationPermissions = remember {
+        listOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+
     var printEvent by remember { mutableStateOf<PrintRequestEvent.RequestPermissionsAndPrint?>(null) }
     var locationEvent by remember { mutableStateOf<LocationRequestEvent.RequestLocation?>(null) }
     var scanEvent by remember { mutableStateOf<ScanRequestEvent.RequestScan?>(null) }
     var webView: WebView? by remember { mutableStateOf(null) }
-
 
     val permissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -82,7 +72,7 @@ fun MainScreen(
                 viewModel.proceedWithPrintingAfterPermission(
                     printEvent!!.data, printEvent!!.restoreState
                 )
-                printEvent = null // Clear pending data
+                printEvent = null
             } else {
                 viewModel.onPrintingError(
                     "Permisos de Bluetooth no concedidos.", printEvent!!.restoreState
@@ -98,7 +88,7 @@ fun MainScreen(
         if (locationEvent != null) {
             if (allGranted) {
                 viewModel.proceedWithLastLocationRequest(locationEvent!!.restoreState)
-                locationEvent = null // Clear pending data
+                locationEvent = null
             } else {
                 viewModel.onPrintingError(
                     "Permisos de ubicación no concedidos.", locationEvent!!.restoreState
@@ -125,11 +115,9 @@ fun MainScreen(
         }
     }
 
-    // Handles print requests from ViewModel
     LaunchedEffect(Unit) {
         viewModel.printRequestSharedEvent.collect { event ->
             when (event) {
-                // Then use activity in shouldShowRequestPermissionRationale if (activity != null)
                 is PrintRequestEvent.RequestPermissionsAndPrint -> {
                     printEvent = event
                     permissionsLauncher.launch(bluetoothPermissions.toTypedArray())
@@ -137,12 +125,13 @@ fun MainScreen(
             }
         }
     }
+
     LaunchedEffect(Unit) {
         viewModel.locationRequestSharedEvent.collect { event ->
             when (event) {
                 is LocationRequestEvent.RequestLocation -> {
                     locationEvent = event
-                    locationPermissionsLauncher.launch(bluetoothPermissions.toTypedArray())
+                    locationPermissionsLauncher.launch(locationPermissions.toTypedArray())
                 }
             }
         }
@@ -151,11 +140,21 @@ fun MainScreen(
     val scanLauncher = rememberLauncherForActivityResult(
         contract = ScanContract()
     ) { result ->
-        result.contents?.let { barcode ->
-            if (scanEvent != null) {
-                viewModel.onScanResult(barcode, scanEvent!!.restoreState)
-                scanEvent = null
+        if (scanEvent != null) {
+            if (result.contents == null) {
+                viewModel.onScanResult(
+                    BarcodeResult.error("No se pudo realizar el escaneo"),
+                    scanEvent!!.restoreState
+                )
+            } else {
+                result.contents?.let { barcode ->
+                    viewModel.onScanResult(
+                        BarcodeResult.success(barcode = barcode, fieldName = scanEvent!!.fieldName),
+                        scanEvent!!.restoreState
+                    )
+                }
             }
+            scanEvent = null
         }
     }
 
@@ -180,7 +179,7 @@ fun MainScreen(
 
     LaunchedEffect(webView, uiState) {
         if (webView != null) {
-            viewModel.webViewEvent.collectLatest { event -> // Use webViewEvent (the SharedFlow)
+            viewModel.webViewEvent.collectLatest { event ->
                 when (event) {
                     is WebViewEvent.GoBack -> {
                         if (uiState is MainUiState.Initial) {
@@ -191,7 +190,7 @@ fun MainScreen(
                     }
 
                     is WebViewEvent.ExecuteJavaScript -> {
-                        webView!!.post { // Ensure it runs on the UI thread
+                        webView!!.post {
                             webView!!.evaluateJavascript(event.script, null)
                         }
                     }
@@ -205,65 +204,66 @@ fun MainScreen(
         }
     }
 
-    // Handle back button press
     BackHandler {
         when (val currentState = uiState) {
             is MainUiState.Initial -> viewModel.onBackPressed(currentState)
             is MainUiState.Error -> currentState.onRetry()
             is MainUiState.Dialog -> currentState.onDismiss()
-            is MainUiState.Loading -> { /* Optionally handle back press during loading, or let it be blocked by default */
-            }
+            is MainUiState.Loading -> {}
         }
     }
 
+    // CRITICAL: Box layout with WebView always visible underneath
     Box(modifier = Modifier.fillMaxSize()) {
+        // WebView is ALWAYS rendered - it never gets removed from composition
         FullScreenWebView(
             uiState = uiState,
-            onUistateChanged = {
-                viewModel.onStateChanged(it)
-            },
-            javaScriptInterface = if (uiState is MainUiState.Initial) (uiState as MainUiState.Initial).javaScriptInterface else null,
-            onWebViewIsReady = { wv ->
-                webView = wv
-            })
+            onUistateChanged = { viewModel.onStateChanged(it) },
+            javaScriptInterface = if (uiState is MainUiState.Initial) {
+                (uiState as MainUiState.Initial).javaScriptInterface
+            } else null,
+            onWebViewIsReady = { wv -> webView = wv }
+        )
+
+        // Overlays appear ON TOP of WebView without removing it
         when (val currentState = uiState) {
-            is MainUiState.Dialog -> AlertDialog(
-                onDismissRequest = currentState.onDismiss,
-                title = {
-                    Text(text = stringResource(R.string.app_name))
-                },
-                text = {
-                    Text(text = "¿Desea salir de la aplicación?")
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { viewModel.exitApp() }) {
-                        Text(stringResource(R.string.yes))
+            is MainUiState.Dialog -> {
+                AlertDialog(
+                    onDismissRequest = currentState.onDismiss,
+                    title = { Text(text = stringResource(R.string.app_name)) },
+                    text = { Text(text = "¿Desea salir de la aplicación?") },
+                    confirmButton = {
+                        Button(onClick = { viewModel.exitApp() }) {
+                            Text(stringResource(R.string.yes))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = currentState.onDismiss) {
+                            Text(stringResource(R.string.no))
+                        }
                     }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = currentState.onDismiss
-                    ) {
-                        Text(stringResource(R.string.no))
-                    }
-                })
+                )
+            }
 
-            is MainUiState.Error -> ErrorView(
-                onRetry = currentState.onRetry, errorMessage = currentState.message
-            )
+            is MainUiState.Error -> {
+                ErrorOverlay(
+                    onRetry = currentState.onRetry,
+                    errorMessage = currentState.message
+                )
+            }
 
-            is MainUiState.Loading -> LoadingOverlay(message = currentState.message)
-            else -> {}
+            is MainUiState.Loading -> {
+                LoadingOverlay(message = currentState.message)
+            }
+
+            else -> { /* WebView is visible, no overlay */
+            }
         }
     }
 }
 
-
 @Composable
-private fun LoadingOverlay(
-    message: String
-) {
+private fun LoadingOverlay(message: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -304,30 +304,34 @@ private fun LoadingOverlay(
 }
 
 @Composable
-private fun ErrorView(
-    onRetry: () -> Unit, errorMessage: String
-) {
-    Column(
+private fun ErrorOverlay(onRetry: () -> Unit, errorMessage: String) {
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = errorMessage,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.webview_error),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = onRetry) {
-            Text(stringResource(R.string.retry))
+        Column(
+            modifier = Modifier.padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = stringResource(R.string.webview_error),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onRetry) {
+                Text(stringResource(R.string.retry))
+            }
         }
     }
 }

@@ -1,23 +1,18 @@
 package com.dreamsoft.desoft20.features.download
 
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.database.Cursor
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.webkit.MimeTypeMap
 import android.webkit.URLUtil
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.dreamsoft.desoft20.features.download.models.DownloadRequest
 import com.dreamsoft.desoft20.features.download.models.DownloadResult
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,25 +22,40 @@ class DownloadManager @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
     private val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    private val activeDownloads = mutableMapOf<Long, DownloadRequest>()
+    private val activeDownloads = mutableMapOf<Long, DownloadCallback>()
+    private val handler = Handler(Looper.getMainLooper())
+
+    companion object {
+        private const val TAG = "DownloadManager"
+        private const val POLL_INTERVAL_MS = 500L
+    }
+
+    data class DownloadCallback(
+        val filename: String,
+        val onProgress: (DownloadResult) -> Unit,
+        val onComplete: (DownloadResult) -> Unit,
+        val onError: (DownloadResult) -> Unit
+    )
 
     /**
-     * Start a download and return Flow for tracking progress
+     * Start a download with polling-based tracking
      */
-    fun downloadFile(request: DownloadRequest): Flow<DownloadResult> = callbackFlow {
+    fun downloadFile(
+        request: DownloadRequest,
+        onProgress: (DownloadResult) -> Unit,
+        onComplete: (DownloadResult) -> Unit,
+        onError: (DownloadResult) -> Unit
+    ): Long {
         try {
             // Validate URL
             if (!URLUtil.isValidUrl(request.url)) {
-                trySend(DownloadResult(
-                    code = DownloadResult.ERROR,
-                    message = "URL inválida: ${request.url}"
-                ))
-                close()
-                return@callbackFlow
+                onError(DownloadResult.error("URL inválida: ${request.url}"))
+                return -1
             }
 
-            // Generate filename
             val filename = request.filename ?: generateFilename(request.url, request.mimeType)
+
+            Log.d(TAG, "Starting download: $filename from ${request.url}")
 
             // Create download request
             val downloadRequest = DownloadManager.Request(request.url.toUri()).apply {
@@ -58,13 +68,13 @@ class DownloadManager @Inject constructor(
                     addRequestHeader(key, value)
                 }
 
-                // Set destination
+                // Save to Downloads/Desoftinf folder
                 setDestinationInExternalPublicDir(
                     Environment.DIRECTORY_DOWNLOADS,
-                    filename
+                    "Desoftinf/$filename"
                 )
 
-                // Allow download over mobile network
+                // Allow all network types
                 setAllowedNetworkTypes(
                     DownloadManager.Request.NETWORK_WIFI or
                             DownloadManager.Request.NETWORK_MOBILE
@@ -73,125 +83,110 @@ class DownloadManager @Inject constructor(
 
             // Enqueue download
             val downloadId = downloadManager.enqueue(downloadRequest)
-            activeDownloads[downloadId] = request
 
-            // Send initial status
-            trySend(DownloadResult(
-                code = DownloadResult.IN_PROGRESS,
+            // Store callback
+            activeDownloads[downloadId] = DownloadCallback(
+                filename = filename,
+                onProgress = onProgress,
+                onComplete = onComplete,
+                onError = onError
+            )
+
+            Log.d(TAG, "Download enqueued - ID: $downloadId")
+
+            // Send initial progress
+            onProgress(DownloadResult.inProgress(
                 message = "Descarga iniciada...",
                 filename = filename
             ))
 
-            // Register broadcast receiver for completion
-            val receiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
+            // Start polling
+            startPolling(downloadId)
 
-                    if (id == downloadId) {
-                        val result = queryDownloadStatus(downloadId, filename)
-                        trySend(result)
-
-                        // Cleanup
-                        activeDownloads.remove(downloadId)
-                        context?.unregisterReceiver(this)
-                        close()
-                    }
-                }
-            }
-
-            ContextCompat.registerReceiver(
-                context,
-                receiver,
-                IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                ContextCompat.RECEIVER_NOT_EXPORTED
-            )
-
-            // Cleanup on cancellation
-            awaitClose {
-                activeDownloads.remove(downloadId)
-            }
+            return downloadId
 
         } catch (e: Exception) {
-            Log.e("DownloadManager", "Error starting download", e)
-            trySend(DownloadResult(
-                code = DownloadResult.ERROR,
-                message = "Error: ${e.message}"
-            ))
-            close()
+            Log.e(TAG, "Error starting download", e)
+            onError(DownloadResult.error("Error: ${e.message}"))
+            return -1
         }
     }
 
     /**
-     * Query download status
+     * Poll download status every 500ms
      */
-    private fun queryDownloadStatus(downloadId: Long, filename: String): DownloadResult {
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        val cursor: Cursor? = downloadManager.query(query)
+    private fun startPolling(downloadId: Long) {
+        val pollRunnable = object : Runnable {
+            override fun run() {
+                val callback = activeDownloads[downloadId]
 
-        return if (cursor != null && cursor.moveToFirst()) {
-            val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-            val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-            val uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-            val bytesIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-
-            val status = cursor.getInt(statusIndex)
-            val reason = cursor.getInt(reasonIndex)
-            val localUri = cursor.getString(uriIndex)
-            val totalBytes = cursor.getLong(bytesIndex)
-
-            cursor.close()
-
-            when (status) {
-                DownloadManager.STATUS_SUCCESSFUL -> {
-                    val filepath = localUri?.toUri()?.path ?: ""
-                    DownloadResult(
-                        code = DownloadResult.SUCCESS,
-                        message = "Descarga completada",
-                        filename = filename,
-                        filepath = filepath,
-                        filesize = totalBytes
-                    )
+                // If callback removed, stop polling
+                if (callback == null) {
+                    Log.d(TAG, "Polling stopped - download $downloadId no longer active")
+                    return
                 }
-                DownloadManager.STATUS_FAILED -> {
-                    val errorMsg = when (reason) {
-                        DownloadManager.ERROR_CANNOT_RESUME -> "No se puede reanudar"
-                        DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Almacenamiento no encontrado"
-                        DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "Archivo ya existe"
-                        DownloadManager.ERROR_FILE_ERROR -> "Error de archivo"
-                        DownloadManager.ERROR_HTTP_DATA_ERROR -> "Error de datos HTTP"
-                        DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Espacio insuficiente"
-                        DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Demasiadas redirecciones"
-                        DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Código HTTP no manejado"
-                        else -> "Error desconocido"
+
+                // Query download status
+                val query = DownloadManager.Query().setFilterById(downloadId)
+                val cursor = downloadManager.query(query)
+
+                if (cursor != null && cursor.moveToFirst()) {
+                    val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+                    val status = cursor.getInt(statusIndex)
+                    cursor.close()
+
+                    when (status) {
+                        DownloadManager.STATUS_SUCCESSFUL -> {
+                            Log.d(TAG, "Download $downloadId completed successfully")
+                            val result = queryDownloadStatus(downloadId, callback.filename)
+                            callback.onComplete(result)
+                            activeDownloads.remove(downloadId)
+                        }
+
+                        DownloadManager.STATUS_FAILED -> {
+                            Log.d(TAG, "Download $downloadId failed")
+                            val result = queryDownloadStatus(downloadId, callback.filename)
+                            callback.onError(result)
+                            activeDownloads.remove(downloadId)
+                        }
+
+                        DownloadManager.STATUS_RUNNING -> {
+                            // Get progress percentage
+                            val progress = getDownloadProgress(downloadId)
+                            callback.onProgress(DownloadResult.inProgress(
+                                message = "Descargando... $progress%",
+                                filename = callback.filename
+                            ))
+                            // Continue polling
+                            handler.postDelayed(this, POLL_INTERVAL_MS)
+                        }
+
+                        else -> {
+                            // PENDING or PAUSED - continue polling
+                            handler.postDelayed(this, POLL_INTERVAL_MS)
+                        }
                     }
-                    DownloadResult(
-                        code = DownloadResult.ERROR,
-                        message = "Descarga fallida: $errorMsg"
-                    )
-                }
-                else -> {
-                    DownloadResult(
-                        code = DownloadResult.IN_PROGRESS,
-                        message = "Descargando...",
-                        filename = filename
-                    )
+                } else {
+                    // Query failed
+                    cursor?.close()
+                    Log.e(TAG, "Failed to query download $downloadId")
+                    callback.onError(DownloadResult.error("No se pudo consultar el estado"))
+                    activeDownloads.remove(downloadId)
                 }
             }
-        } else {
-            cursor?.close()
-            DownloadResult(
-                code = DownloadResult.ERROR,
-                message = "No se pudo consultar el estado de descarga"
-            )
         }
+
+        // Start polling after initial delay
+        handler.postDelayed(pollRunnable, POLL_INTERVAL_MS)
+        Log.d(TAG, "Polling started for download $downloadId")
     }
 
     /**
-     * Get download progress (0-100)
+     * Get download progress percentage (0-100)
      */
-    fun getDownloadProgress(downloadId: Long): Int {
+    private fun getDownloadProgress(downloadId: Long): Int {
         val query = DownloadManager.Query().setFilterById(downloadId)
-        val cursor: Cursor? = downloadManager.query(query)
+        val cursor = downloadManager.query(query)
 
         return if (cursor != null && cursor.moveToFirst()) {
             val bytesDownloadedIndex = cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
@@ -199,7 +194,6 @@ class DownloadManager @Inject constructor(
 
             val bytesDownloaded = cursor.getLong(bytesDownloadedIndex)
             val bytesTotal = cursor.getLong(bytesTotalIndex)
-
             cursor.close()
 
             if (bytesTotal > 0) {
@@ -214,21 +208,77 @@ class DownloadManager @Inject constructor(
     }
 
     /**
-     * Cancel download
+     * Query detailed download status
+     */
+    private fun queryDownloadStatus(downloadId: Long, filename: String): DownloadResult {
+        val query = DownloadManager.Query().setFilterById(downloadId)
+        val cursor = downloadManager.query(query)
+
+        return if (cursor != null && cursor.moveToFirst()) {
+            val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
+            val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
+            val uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+            val bytesIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+
+            val status = cursor.getInt(statusIndex)
+            val reason = cursor.getInt(reasonIndex)
+            val localUri = cursor.getString(uriIndex)
+            val totalBytes = cursor.getLong(bytesIndex)
+            cursor.close()
+
+            when (status) {
+                DownloadManager.STATUS_SUCCESSFUL -> {
+                    val filepath = localUri?.toUri()?.path ?: ""
+                    DownloadResult.success(
+                        message = "Descarga completada",
+                        filename = filename,
+                        filepath = filepath,
+                        filesize = totalBytes
+                    )
+                }
+
+                DownloadManager.STATUS_FAILED -> {
+                    val errorMsg = when (reason) {
+                        DownloadManager.ERROR_CANNOT_RESUME -> "No se puede reanudar"
+                        DownloadManager.ERROR_DEVICE_NOT_FOUND -> "Almacenamiento no encontrado"
+                        DownloadManager.ERROR_FILE_ALREADY_EXISTS -> "Archivo ya existe"
+                        DownloadManager.ERROR_FILE_ERROR -> "Error de archivo"
+                        DownloadManager.ERROR_HTTP_DATA_ERROR -> "Error de datos HTTP"
+                        DownloadManager.ERROR_INSUFFICIENT_SPACE -> "Espacio insuficiente"
+                        DownloadManager.ERROR_TOO_MANY_REDIRECTS -> "Demasiadas redirecciones"
+                        DownloadManager.ERROR_UNHANDLED_HTTP_CODE -> "Código HTTP no manejado"
+                        else -> "Error desconocido (code: $reason)"
+                    }
+                    DownloadResult.error("Descarga fallida: $errorMsg")
+                }
+
+                else -> {
+                    DownloadResult.inProgress(
+                        message = "Descargando...",
+                        filename = filename
+                    )
+                }
+            }
+        } else {
+            cursor?.close()
+            DownloadResult.error("No se pudo consultar el estado de descarga")
+        }
+    }
+
+    /**
+     * Cancel a download
      */
     fun cancelDownload(downloadId: Long) {
         downloadManager.remove(downloadId)
         activeDownloads.remove(downloadId)
+        Log.d(TAG, "Download $downloadId cancelled")
     }
 
     /**
      * Generate filename from URL
      */
     private fun generateFilename(url: String, mimeType: String?): String {
-        // Try to get filename from URL
         val urlFilename = URLUtil.guessFileName(url, null, mimeType)
-
-        // If still generic, create timestamp-based name
         return if (urlFilename == "downloadfile.bin") {
             val timestamp = System.currentTimeMillis()
             val extension = mimeType?.let {
@@ -246,7 +296,7 @@ class DownloadManager @Inject constructor(
     fun isFileDownloaded(filename: String): Boolean {
         val file = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            filename
+            "Desoftinf/$filename"
         )
         return file.exists()
     }
@@ -255,37 +305,59 @@ class DownloadManager @Inject constructor(
      * Open downloaded file with default app
      */
     fun openDownloadedFile(context: Context, filename: String): Boolean {
-        val query = DownloadManager.Query()
-        val cursor = downloadManager.query(query)
+        try {
+            // First, try to find the file in the Desoftinf folder
+            val file = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "Desoftinf/$filename"
+            )
 
-        while (cursor.moveToNext()) {
-            val filenameIndex = cursor.getColumnIndex(DownloadManager.COLUMN_TITLE)
-            val uriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-
-            if (cursor.getString(filenameIndex) == filename) {
-                val localUri = cursor.getString(uriIndex)
-                cursor.close()
-
-                return try {
-                    val intent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(localUri.toUri(), getMimeType(filename))
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    }
-                    context.startActivity(intent)
-                    true
-                } catch (e: Exception) {
-                    Log.e("DownloadManager", "Error opening file", e)
-                    false
-                }
+            if (!file.exists()) {
+                Log.e(TAG, "File not found: ${file.absolutePath}")
+                return false
             }
+
+            // Use FileProvider to get a content URI (required for Android 7+)
+            val contentUri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+
+            val mimeType = getMimeType(filename)
+            Log.d(TAG, "Opening file: $filename with MIME type: $mimeType")
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(contentUri, mimeType)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+
+            context.startActivity(intent)
+            return true
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error opening file: $filename", e)
+            return false
         }
-        cursor.close()
-        return false
     }
 
+    /**
+     * Get MIME type from filename
+     */
     private fun getMimeType(filename: String): String {
         val extension = filename.substringAfterLast('.', "")
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension)
             ?: "application/octet-stream"
+    }
+
+    /**
+     * Cleanup - cancel all active downloads
+     */
+    fun cleanup() {
+        activeDownloads.keys.forEach { downloadId ->
+            handler.removeCallbacksAndMessages(downloadId)
+        }
+        activeDownloads.clear()
+        Log.d(TAG, "All downloads cleaned up")
     }
 }

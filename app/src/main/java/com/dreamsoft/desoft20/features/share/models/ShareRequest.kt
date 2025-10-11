@@ -15,7 +15,11 @@ data class ShareResult(
     val message: String
 ) {
     companion object {
-        const val SUCCESS = 1
-        const val ERROR = 2
+        fun success(message: String) = ShareResult(code = 1, message = message)
+        fun error(message: String) = ShareResult(code = 3, message = message)
+        fun loading(message: String) = ShareResult(code = 2, message = message)
+
+
+
     }
 }

@@ -22,5 +22,8 @@ data class DownloadResult(
         const val SUCCESS = 1
         const val IN_PROGRESS = 2
         const val ERROR = 3
+        fun success(message: String, filename: String, filepath: String, filesize: Long) = DownloadResult(SUCCESS, message, filename, filepath, filesize)
+        fun inProgress(message: String,filename: String) = DownloadResult(IN_PROGRESS, message,filename)
+        fun error(message: String) = DownloadResult(ERROR, message)
     }
 }

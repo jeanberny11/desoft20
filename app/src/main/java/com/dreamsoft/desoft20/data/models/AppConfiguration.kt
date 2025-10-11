@@ -7,5 +7,6 @@ data class AppConfiguration(
     val useLocalUrl: Boolean = false,
     val enableCache: Boolean = false,
     val enableZoom: Boolean = false,
-    val enableWebNavigation: Boolean = false
+    val enableWebNavigation: Boolean = false,
+    val enableSwipeRefresh: Boolean = false
 )

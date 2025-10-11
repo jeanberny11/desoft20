@@ -28,6 +28,7 @@ class PreferencesManager @Inject constructor(
         private val ENABLE_CACHE_KEY = booleanPreferencesKey("enable_cache")
         private val ENABLE_ZOOM_KEY = booleanPreferencesKey("enable_zoom")
         private val ENABLE_WEB_NAVIGATION_KEY = booleanPreferencesKey("enable_web_navigation")
+        private val ENABLE_SWIPE_REFRESH_KEY = booleanPreferencesKey("enable_swipe_refresh")
     }
 
     val configurationFlow: Flow<AppConfiguration> = dataStore.data.map { preferences ->
@@ -38,7 +39,8 @@ class PreferencesManager @Inject constructor(
             useLocalUrl = preferences[USE_LOCAL_URL_KEY] ?: false,
             enableCache = preferences[ENABLE_CACHE_KEY] ?: false,
             enableZoom = preferences[ENABLE_ZOOM_KEY] ?: false,
-            enableWebNavigation = preferences[ENABLE_WEB_NAVIGATION_KEY] ?: false
+            enableWebNavigation = preferences[ENABLE_WEB_NAVIGATION_KEY] ?: false,
+            enableSwipeRefresh = preferences[ENABLE_SWIPE_REFRESH_KEY] ?: false
         )
     }
 
@@ -55,6 +57,7 @@ class PreferencesManager @Inject constructor(
             preferences[ENABLE_CACHE_KEY] = configuration.enableCache
             preferences[ENABLE_ZOOM_KEY] = configuration.enableZoom
             preferences[ENABLE_WEB_NAVIGATION_KEY] = configuration.enableWebNavigation
+            preferences[ENABLE_SWIPE_REFRESH_KEY] = configuration.enableSwipeRefresh
         }
     }
 }

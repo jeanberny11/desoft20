@@ -15,11 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.dreamsoft.desoft20.R
@@ -34,50 +33,91 @@ fun FullScreenWebView(
     javaScriptInterface: WebViewJavaScriptInterface?,
     onWebViewIsReady: (WebView) -> Unit,
 ) {
-    // CRITICAL: Remember WebView instance across recompositions
-    val webViewState = remember {
-        mutableStateOf<WebView?>(null)
+    val context = LocalContext.current
+
+    // CRITICAL: Create WebView instance ONCE and remember it
+    // This prevents recreation during recomposition
+    val webViewHolder = remember {
+        WebViewHolder()
     }
 
-    // Track if initial URL has been loaded
-    val initialUrlLoaded = remember { mutableStateOf(false) }
-
-    // Track current URL to prevent unnecessary reloads
+    // Track the last loaded URL to prevent unnecessary reloads
     val lastLoadedUrl = remember { mutableStateOf("") }
 
-    // Expose WebView back functionality to parent
-    LaunchedEffect(webViewState, uiState) {
-        webViewState.value?.let { wv ->
-            onWebViewIsReady(wv)
+    // Expose WebView to parent when ready
+    LaunchedEffect(webViewHolder.webView) {
+        webViewHolder.webView?.let { onWebViewIsReady(it) }
+    }
+
+    // Handle JavaScript interface changes
+    LaunchedEffect(javaScriptInterface) {
+        webViewHolder.webView?.let { webView ->
+            // Remove old interface if exists
+            webView.removeJavascriptInterface("AndroidInterfaces")
+
+            // Add new interface if not null
+            if (javaScriptInterface != null) {
+                webView.addJavascriptInterface(javaScriptInterface, "AndroidInterfaces")
+            }
+        }
+    }
+
+    // Handle URL changes without recreating WebView
+    LaunchedEffect(uiState) {
+        if (uiState is MainUiState.Initial) {
+            webViewHolder.webView?.let { webView ->
+                val newUrl = uiState.currentUrl
+
+                // Load URL if it's different from the last one we loaded
+                if (newUrl.isNotEmpty() && newUrl != lastLoadedUrl.value) {
+                    webView.loadUrl(newUrl)
+                    lastLoadedUrl.value = newUrl
+                }
+            }
         }
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            // Cleanup when composable is disposed
-            webViewState.value?.apply {
+            // Cleanup when composable is permanently disposed
+            webViewHolder.webView?.apply {
                 stopLoading()
                 removeJavascriptInterface("AndroidInterfaces")
+                destroy()
             }
+            webViewHolder.swipeRefreshLayout?.removeAllViews()
         }
     }
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
-        factory = { context ->
-            SwipeRefreshLayout(context).apply {
+        factory = { factoryContext ->
+            // Create SwipeRefreshLayout
+            SwipeRefreshLayout(factoryContext).apply {
                 val swrl = this
-                val webViewInstance = WebView(context).apply {
+
+                val swipeRefreshEnabled = if (uiState is MainUiState.Initial) {
+                    uiState.configuration.enableSwipeRefresh
+                } else {
+                    false
+                }
+
+                isEnabled = swipeRefreshEnabled
+
+                // Create WebView ONCE
+                val webView = WebView(factoryContext).apply {
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    if (javaScriptInterface!=null){
-                        addJavascriptInterface(javaScriptInterface, "AndroidInterfaces")
+
+                    // Configure WebView settings
+                    val enabledZoom = if (uiState is MainUiState.Initial) {
+                        uiState.configuration.enableZoom
+                    } else {
+                        false
                     }
-                    // WebView settings
-                    val enabledZoom =
-                        if (uiState is MainUiState.Initial) uiState.configuration.enableZoom else false
+
                     settings.apply {
                         loadsImagesAutomatically = true
                         javaScriptEnabled = true
@@ -122,8 +162,6 @@ fun FullScreenWebView(
                             if (uiState is MainUiState.Initial) {
                                 onUistateChanged(uiState.copy(canGoBack = view?.canGoBack() == true))
                             }
-                            // Update last loaded URL
-                            url?.let { lastLoadedUrl.value = it }
                         }
 
                         override fun onReceivedError(
@@ -140,7 +178,7 @@ fun FullScreenWebView(
                                     MainUiState.Error(
                                         description ?: "Network error",
                                         onRetry = {
-                                            onUistateChanged(uiState)
+                                            view?.reload()
                                         })
                                 )
                             }
@@ -152,12 +190,11 @@ fun FullScreenWebView(
                             handler: SslErrorHandler?,
                             error: SslError?
                         ) {
-                            // For development - in production, handle SSL errors properly
                             handler?.proceed()
                         }
                     }
 
-                    // WebChrome client for progress and other features
+                    // WebChrome client
                     webChromeClient = object : WebChromeClient() {
                         override fun onProgressChanged(view: WebView?, newProgress: Int) {
                             // Progress handling if needed
@@ -167,34 +204,33 @@ fun FullScreenWebView(
                             origin: String?,
                             callback: GeolocationPermissions.Callback?
                         ) {
-                            // Grant geolocation permission
                             callback?.invoke(origin, true, true)
                         }
 
                         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
-                            // Log web console messages for debugging
                             consoleMessage?.let {
                                 println("${it.messageLevel()}: ${it.message()}")
-                                //android.util.Log.d("WebView", "${it.messageLevel()}: ${it.message()}")
                             }
                             return super.onConsoleMessage(consoleMessage)
                         }
                     }
-                    if (uiState is MainUiState.Initial && uiState.currentUrl.isNotEmpty()) {
-                        loadUrl(uiState.currentUrl)
-                        initialUrlLoaded.value = true
-                        lastLoadedUrl.value = uiState.currentUrl
-                    }
-                }
-                webViewState.value = webViewInstance
-                addView(webViewInstance)
 
-                // Swipe refresh listener
+                    // Don't load URL here - let LaunchedEffect handle it
+                    // This prevents issues with state synchronization
+                }
+
+                // Store references
+                webViewHolder.webView = webView
+                webViewHolder.swipeRefreshLayout = this
+
+                // Add WebView to SwipeRefreshLayout
+                addView(webView)
+
+                // Configure swipe refresh
                 setOnRefreshListener {
-                    webViewInstance.reload()
+                    webView.reload()
                 }
 
-                // Set colors
                 setColorSchemeResources(
                     R.color.primary,
                     R.color.secondary,
@@ -204,19 +240,15 @@ fun FullScreenWebView(
             }
         },
         update = { swipeRefreshLayout ->
+            // Update is called on recomposition but WebView persists
+            // Only update refresh state, don't recreate anything
             swipeRefreshLayout.isRefreshing = false
-            if (uiState is MainUiState.Initial) {
-                webViewState.value?.let { webView ->
-                    // Only reload if URL has changed AND it's not the initial load
-                    if (uiState.currentUrl.isNotEmpty() &&
-                        uiState.currentUrl != lastLoadedUrl.value &&
-                        initialUrlLoaded.value) {
-
-                        webView.loadUrl(uiState.currentUrl)
-                        lastLoadedUrl.value = uiState.currentUrl
-                    }
-                }
-            }
         }
     )
+}
+
+// Helper class to hold WebView reference across recompositions
+private class WebViewHolder {
+    var webView: WebView? = null
+    var swipeRefreshLayout: SwipeRefreshLayout? = null
 }

@@ -66,7 +66,9 @@ if (typeof AndroidInterfaces !== 'undefined') {
             if (data.resultCode === 1) {
                 log(`Coordinates: ${data.latitude}, ${data.longitude} (±${data.accuracy}m)`, 'info');
             }
-        } catch(e) {}
+        } catch(e) {
+            log('Error decoding location result: ' + e.message, 'error');
+        }
     };
 
     AndroidInterfaces.onBarcodeResult = function(result) {
@@ -85,12 +87,9 @@ if (typeof AndroidInterfaces !== 'undefined') {
         log('❌ Download Error: ' + JSON.parse(result).message, 'error');
     };
 
-    AndroidInterfaces.onShareSuccess = function(result) {
-        log('✅ Share Success: ' + result, 'success');
-    };
-
-    AndroidInterfaces.onShareError = function(result) {
-        log('❌ Share Error: ' + JSON.parse(result).message, 'error');
+    AndroidInterfaces.onShareResult = function(result) {
+        //log('✅ Share Result: ' + JSON.parse(result).message, 'error');
+        log('✅ Share Result: ' + result, 'success');
     };
 
     log('✅ AndroidInterfaces connected and ready!', 'success');

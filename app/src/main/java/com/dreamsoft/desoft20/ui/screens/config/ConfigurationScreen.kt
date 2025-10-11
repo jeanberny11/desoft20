@@ -181,6 +181,18 @@ fun ConfigurationScreen(
                             onCheckedChange = viewModel::updateEnableWebNavigation
                         )
                     }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Enable Swipe to Refresh")
+                        Switch(
+                            checked = uiState.enableSwipeRefresh,
+                            onCheckedChange = viewModel::updateEnableSwipeRefresh
+                        )
+                    }
                 }
             }
 

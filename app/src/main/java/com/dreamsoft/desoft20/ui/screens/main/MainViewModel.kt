@@ -2,6 +2,7 @@ package com.dreamsoft.desoft20.ui.screens.main
 
 import android.Manifest
 import android.app.Application
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
@@ -74,7 +75,7 @@ sealed class LocationRequestEvent {
 }
 
 sealed class ScanRequestEvent {
-    data class RequestScan(val restoreState: MainUiState) : ScanRequestEvent()
+    data class RequestScan(val restoreState: MainUiState,val fieldName: String) : ScanRequestEvent()
 }
 
 @Suppress("SpellCheckingInspection")
@@ -167,18 +168,18 @@ class MainViewModel @Inject constructor(
                     }
                 },
                 onOpenInBrowser = { url ->
-                    val browserIntent = android.content.Intent(
-                        android.content.Intent.ACTION_VIEW,
+                    val browserIntent = Intent(
+                        Intent.ACTION_VIEW,
                         url.toUri()
                     )
-                    browserIntent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                    browserIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     application.startActivity(browserIntent)
                 },
                 onGetLastLocation = {
                     onGetLastLocationTrigger()
                 },
                 onReadBarcode = {
-
+                    onRequestScan(it)
                 },
                 onDownloadFile = { onDownloadFileTrigger(it) },
                 onOpenFile = { onOpenFileTrigger(it) },
@@ -257,7 +258,7 @@ class MainViewModel @Inject constructor(
                     return@launch
                 }
                 _uiState.value = MainUiState.Loading("Conectando a: $printerName...")
-                var connected = false
+                var connected: Boolean
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
                     if (ActivityCompat.checkSelfPermission(
                             application,
@@ -302,11 +303,11 @@ class MainViewModel @Inject constructor(
                 printerManager.disconnect()
                 val printResult = PrinterResult(code = 1, message = "Impresion Finalizada")
                 executeJavaScript(
-                    "${WebViewCallbacks.ON_PRINT_RESULT}(${
+                    "${WebViewCallbacks.ON_PRINT_RESULT}('${
                         Json.encodeToString(
                             printResult
                         )
-                    })"
+                    }')"
                 )
                 _uiState.value = restoreState
 
@@ -337,11 +338,11 @@ class MainViewModel @Inject constructor(
                 }
                 val printResult = PrinterResult(code = 1, message = "Impresion Finalizada")
                 executeJavaScript(
-                    "${WebViewCallbacks.ON_PRINT_RESULT}(${
+                    "${WebViewCallbacks.ON_PRINT_RESULT}('${
                         Json.encodeToString(
                             printResult
                         )
-                    })"
+                    }')"
                 )
                 _uiState.value = restoreState
             } catch (e: Exception) {
@@ -353,15 +354,15 @@ class MainViewModel @Inject constructor(
 
     fun onPrintingError(message: String, restoreState: MainUiState) {
         val printResult = PrinterResult(code = 3, message = message)
-        executeJavaScript("${WebViewCallbacks.ON_PRINT_RESULT}(${Json.encodeToString(printResult)})")
+        executeJavaScript("${WebViewCallbacks.ON_PRINT_RESULT}('${Json.encodeToString(printResult)}')")
         _uiState.value = MainUiState.Error(message, onRetry = {
             _uiState.value = restoreState
         })
     }
 
     fun onLocationError(message: String, restoreState: MainUiState) {
-        val locationData = LocationData(resultCode = 3, message = message)
-        executeJavaScript("${WebViewCallbacks.ON_LOCATION_RESULT}(${Json.encodeToString(locationData)})")
+        val locationData = Json.encodeToString(LocationData.error(message))
+        executeJavaScript("${WebViewCallbacks.ON_LOCATION_RESULT}('$locationData')")
         _uiState.value = MainUiState.Error(message, onRetry = {
             _uiState.value = restoreState
         })
@@ -398,21 +399,18 @@ class MainViewModel @Inject constructor(
             val lastLocation = locationManager.getLastLocation(application)
             when (lastLocation) {
                 is LocationResult.Success -> {
-                    val locationData = LocationData(
-                        resultCode = 3,
-                        message = "Ubicacion obtenida",
+                    val locationData = LocationData.success(
                         altitude = lastLocation.location.altitude,
                         accuracy = lastLocation.location.accuracy,
                         latitude = lastLocation.location.latitude,
                         longitude = lastLocation.location.longitude
                     )
+                    val jsonstring = Json.encodeToString(locationData)
+                    Log.d("LocationData", jsonstring)
                     executeJavaScript(
-                        "${WebViewCallbacks.ON_LOCATION_RESULT}(${
-                            Json.encodeToString(
-                                locationData
-                            )
-                        })"
+                        "${WebViewCallbacks.ON_LOCATION_RESULT}('$jsonstring')"
                     )
+                    _uiState.value = restoreState
                 }
 
                 is LocationResult.Error -> {
@@ -430,11 +428,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun onRequestScan() {
+    private fun onRequestScan(fieldName: String): String {
+        val result = BarcodeResult.loading("Iniciando escaneo")
         viewModelScope.launch {
             val currentState = _uiState.value
-            _scanRequestSharedEvent.emit(ScanRequestEvent.RequestScan(currentState))
+            _scanRequestSharedEvent.emit(ScanRequestEvent.RequestScan(currentState,fieldName))
         }
+        return Json.encodeToString(result)
     }
 
     fun onStateChanged(state: MainUiState) {
@@ -472,84 +472,63 @@ class MainViewModel @Inject constructor(
         exitProcess(0)
     }
 
-    fun onScanResult(barcode: String, restoreState: MainUiState) {
-        val result = BarcodeResult(resultCode = 3, message = "Exito", barcode = barcode)
-        executeJavaScript("${WebViewCallbacks.ON_BARCODE_RESULT}(${Json.encodeToString(result)})")
+    fun onScanResult(result: BarcodeResult, restoreState: MainUiState) {
+        executeJavaScript("${WebViewCallbacks.ON_BARCODE_RESULT}('${Json.encodeToString(result)}')")
         onStateChanged(restoreState)
     }
 
     private fun onDownloadFileTrigger(request: DownloadRequest) {
-        viewModelScope.launch {
-            val previousState = _uiState.value
+        val previousState = _uiState.value
 
-            // Check network
-            if (!networkUtils.hasNetworkConnection()) {
-                executeJavaScript(
-                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${
-                        Json.encodeToString(
-                            DownloadResult(
-                                code = DownloadResult.ERROR,
-                                message = "Sin conexión a internet"
-                            )
+        // Check network
+        if (!networkUtils.hasNetworkConnection()) {
+            executeJavaScript(
+                "${WebViewCallbacks.ON_DOWNLOAD_ERROR}('${
+                    Json.encodeToString(
+                        DownloadResult(
+                            code = DownloadResult.ERROR,
+                            message = "Sin conexión a internet"
                         )
-                    })"
-                )
-                return@launch
-            }
-
-            _uiState.value = MainUiState.Loading("Descargando archivo...")
-
-            try {
-                downloadManager.downloadFile(request).collect { result ->
-                    when (result.code) {
-                        DownloadResult.IN_PROGRESS -> {
-                            _uiState.value = MainUiState.Loading(result.message)
-                            executeJavaScript(
-                                "${WebViewCallbacks.ON_DOWNLOAD_PROGRESS}(${
-                                    Json.encodeToString(
-                                        result
-                                    )
-                                })"
-                            )
-                        }
-
-                        DownloadResult.SUCCESS -> {
-                            executeJavaScript(
-                                "${WebViewCallbacks.ON_DOWNLOAD_COMPLETE}(${
-                                    Json.encodeToString(
-                                        result
-                                    )
-                                })"
-                            )
-                            _uiState.value = previousState
-                        }
-
-                        DownloadResult.ERROR -> {
-                            executeJavaScript(
-                                "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${Json.encodeToString(result)})"
-                            )
-                            _uiState.value = MainUiState.Error(
-                                result.message,
-                                onRetry = { _uiState.value = previousState }
-                            )
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("DownloadError", "Error during download", e)
-                val errorResult = DownloadResult(
-                    code = DownloadResult.ERROR,
-                    message = e.message ?: "Error desconocido"
-                )
-                executeJavaScript(
-                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${Json.encodeToString(errorResult)})"
-                )
-                _uiState.value = MainUiState.Error(
-                    e.message ?: "Error en descarga",
-                    onRetry = { _uiState.value = previousState }
-                )
-            }
+                    )
+                }')"
+            )
+            return
         }
+
+        // Use callback-based approach
+        downloadManager.downloadFile(
+            request = request,
+            onProgress = { result ->
+                Log.d("MainViewModel", "Download progress: ${result.message}")
+                viewModelScope.launch {
+                    _uiState.value = MainUiState.Loading(result.message)
+                    executeJavaScript(
+                        "${WebViewCallbacks.ON_DOWNLOAD_PROGRESS}('${Json.encodeToString(result)}')"
+                    )
+                }
+            },
+            onComplete = { result ->
+                Log.d("MainViewModel", "Download complete: ${result.message}")
+                viewModelScope.launch {
+                    executeJavaScript(
+                        "${WebViewCallbacks.ON_DOWNLOAD_COMPLETE}('${Json.encodeToString(result)}')"
+                    )
+                    _uiState.value = previousState
+                }
+            },
+            onError = { result ->
+                Log.d("MainViewModel", "Download error: ${result.message}")
+                viewModelScope.launch {
+                    executeJavaScript(
+                        "${WebViewCallbacks.ON_DOWNLOAD_ERROR}('${Json.encodeToString(result)}')"
+                    )
+                    _uiState.value = MainUiState.Error(
+                        result.message,
+                        onRetry = { _uiState.value = previousState }
+                    )
+                }
+            }
+        )
     }
 
     private fun onOpenFileTrigger(filename: String) {
@@ -558,27 +537,27 @@ class MainViewModel @Inject constructor(
                 val success = downloadManager.openDownloadedFile(application, filename)
                 if (!success) {
                     executeJavaScript(
-                        "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${
+                        "${WebViewCallbacks.ON_DOWNLOAD_ERROR}('${
                             Json.encodeToString(
                                 DownloadResult(
                                     code = DownloadResult.ERROR,
                                     message = "No se pudo abrir el archivo"
                                 )
                             )
-                        })"
+                        }')"
                     )
                 }
             } catch (e: Exception) {
                 Log.e("OpenFileError", "Error opening file", e)
                 executeJavaScript(
-                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}(${
+                    "${WebViewCallbacks.ON_DOWNLOAD_ERROR}('${
                         Json.encodeToString(
                             DownloadResult(
                                 code = DownloadResult.ERROR,
                                 message = e.message ?: "Error abriendo archivo"
                             )
                         )
-                    })"
+                    }')"
                 )
             }
         }
@@ -588,27 +567,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val result = shareManager.shareImage(request)
-
-                when (result.code) {
-                    ShareResult.SUCCESS -> {
-                        executeJavaScript(
-                            "${WebViewCallbacks.ON_SHARE_SUCCESS}(${Json.encodeToString(result)})"
-                        )
-                    }
-                    ShareResult.ERROR -> {
-                        executeJavaScript(
-                            "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(result)})"
-                        )
-                    }
-                }
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_SHARE_RESULT}('${Json.encodeToString(result)}')"
+                )
             } catch (e: Exception) {
                 Log.e("ShareError", "Error sharing image", e)
-                val errorResult = ShareResult(
-                    code = ShareResult.ERROR,
-                    message = e.message ?: "Error desconocido"
-                )
+                val errorResult = ShareResult.error(e.message ?: "Error desconocido")
                 executeJavaScript(
-                    "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(errorResult)})"
+                    "${WebViewCallbacks.ON_SHARE_RESULT}('${Json.encodeToString(errorResult)}')"
                 )
             }
         }
@@ -622,27 +588,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val result = shareManager.shareMultipleImages(imageNames, message, packageName)
-
-                when (result.code) {
-                    ShareResult.SUCCESS -> {
-                        executeJavaScript(
-                            "${WebViewCallbacks.ON_SHARE_SUCCESS}(${Json.encodeToString(result)})"
-                        )
-                    }
-                    ShareResult.ERROR -> {
-                        executeJavaScript(
-                            "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(result)})"
-                        )
-                    }
-                }
+                executeJavaScript(
+                    "${WebViewCallbacks.ON_SHARE_RESULT}('${Json.encodeToString(result)}')"
+                )
             } catch (e: Exception) {
                 Log.e("ShareError", "Error sharing images", e)
-                val errorResult = ShareResult(
-                    code = ShareResult.ERROR,
-                    message = e.message ?: "Error desconocido"
-                )
+                val errorResult = ShareResult.error(e.message ?: "Error desconocido")
                 executeJavaScript(
-                    "${WebViewCallbacks.ON_SHARE_ERROR}(${Json.encodeToString(errorResult)})"
+                    "${WebViewCallbacks.ON_SHARE_RESULT}('${Json.encodeToString(errorResult)}')"
                 )
             }
         }

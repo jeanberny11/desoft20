@@ -19,6 +19,7 @@ data class ConfigurationUiState(
     val enableCache: Boolean = false,
     val enableZoom: Boolean = false,
     val enableWebNavigation: Boolean = false,
+    val enableSwipeRefresh: Boolean = false,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false
 )
@@ -48,6 +49,7 @@ class ConfigurationViewModel @Inject constructor(
                     enableCache = config.enableCache,
                     enableZoom = config.enableZoom,
                     enableWebNavigation = config.enableWebNavigation,
+                    enableSwipeRefresh = config.enableSwipeRefresh,
                     isLoading = false
                 )
             } catch (_: Exception) {
@@ -84,6 +86,10 @@ class ConfigurationViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(enableWebNavigation = enabled)
     }
 
+    fun updateEnableSwipeRefresh(enabled: Boolean) {  // New update method
+        _uiState.value = _uiState.value.copy(enableSwipeRefresh = enabled)
+    }
+
     fun saveConfiguration() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true)
@@ -95,7 +101,8 @@ class ConfigurationViewModel @Inject constructor(
                     useLocalUrl = _uiState.value.useLocalUrl,
                     enableCache = _uiState.value.enableCache,
                     enableZoom = _uiState.value.enableZoom,
-                    enableWebNavigation = _uiState.value.enableWebNavigation
+                    enableWebNavigation = _uiState.value.enableWebNavigation,
+                    enableSwipeRefresh = _uiState.value.enableSwipeRefresh
                 )
                 configurationRepository.saveConfiguration(config)
                 _uiState.value = _uiState.value.copy(isSaving = false)

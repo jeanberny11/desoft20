@@ -1,5 +1,6 @@
 package com.dreamsoft.desoft20.webview
 
+import android.R
 import android.webkit.JavascriptInterface
 import com.dreamsoft.desoft20.features.download.models.DownloadRequest
 import com.dreamsoft.desoft20.features.download.models.DownloadResult
@@ -23,7 +24,7 @@ class WebViewJavaScriptInterface(
     val onUpdateAppConfiguration: (String, String, Boolean, String, Boolean) -> Unit,
     val onOpenInBrowser: (String) -> Unit,
     val onGetLastLocation: () -> Unit,
-    val onReadBarcode: () -> Unit,
+    val onReadBarcode: (String) -> String,
     val onDownloadFile: (DownloadRequest) -> Unit,  // ← Add this
     val onOpenFile: (String) -> Unit,  // ← Add this
     val onShareImage: (ShareRequest) -> Unit,  // ← Add this
@@ -128,8 +129,8 @@ class WebViewJavaScriptInterface(
     }
 
     @JavascriptInterface
-    fun readBarcode() {
-        onReadBarcode()
+    fun readBarcode(fieldname: String): String {
+        return onReadBarcode(fieldname)
     }
 
     @JavascriptInterface
@@ -184,15 +185,9 @@ class WebViewJavaScriptInterface(
             )
             onShareImage(shareRequest)
 
-            Json.encodeToString(ShareResult(
-                code = ShareResult.SUCCESS,
-                message = "Compartiendo a WhatsApp..."
-            ))
+            Json.encodeToString(ShareResult.loading("Compartiendo imagen..."))
         } catch (e: Exception) {
-            Json.encodeToString(ShareResult(
-                code = ShareResult.ERROR,
-                message = e.message ?: "Error desconocido"
-            ))
+            Json.encodeToString(ShareResult.error(e.message ?: "Error desconocido"))
         }
     }
 
@@ -202,15 +197,9 @@ class WebViewJavaScriptInterface(
             val shareRequest = Json.decodeFromString<ShareRequest>(data)
             onShareImage(shareRequest)
 
-            Json.encodeToString(ShareResult(
-                code = ShareResult.SUCCESS,
-                message = "Compartiendo imagen..."
-            ))
+            Json.encodeToString(ShareResult.loading("Compartiendo imagen..."))
         } catch (e: Exception) {
-            Json.encodeToString(ShareResult(
-                code = ShareResult.ERROR,
-                message = e.message ?: "Error al compartir"
-            ))
+            Json.encodeToString(ShareResult.error(e.message ?: "Error al compartir"))
         }
     }
 
@@ -220,15 +209,9 @@ class WebViewJavaScriptInterface(
             val images = Json.decodeFromString<List<String>>(imageNames)
             onShareMultipleImages(images, message, packageName)
 
-            Json.encodeToString(ShareResult(
-                code = ShareResult.SUCCESS,
-                message = "Compartiendo ${images.size} imágenes..."
-            ))
+            Json.encodeToString(ShareResult.loading("Compartiendo ${images.size} imágenes..."))
         } catch (e: Exception) {
-            Json.encodeToString(ShareResult(
-                code = ShareResult.ERROR,
-                message = e.message ?: "Error al compartir"
-            ))
+            Json.encodeToString(ShareResult.error( e.message ?: "Error al compartir"))
         }
     }
 
